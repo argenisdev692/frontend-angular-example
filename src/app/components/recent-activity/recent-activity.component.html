@@ -1,0 +1,50 @@
+<div class="recent-activity-card">
+  <div class="activity-header">
+    <div class="activity-header-left">
+      <i class="pi pi-history activity-icon"></i>
+      <div>
+        <h3 class="activity-title">Recent Activity</h3>
+        <p class="activity-subtitle">Live user actions</p>
+      </div>
+    </div>
+    <span class="activity-live-dot"></span>
+  </div>
+
+  <div class="marquee-container">
+    <div class="marquee-track">
+      @for (item of activities(); track item.id) {
+        <div class="activity-item">
+          <div class="activity-avatar" [style.--avatar-color]="item.iconColor">
+            <span class="activity-initials">{{ item.initials }}</span>
+          </div>
+          <div class="activity-body">
+            <p class="activity-text">
+              <span class="activity-user">{{ item.user }}</span>
+              <span class="activity-action">{{ item.action }}</span>
+              <span class="activity-target">{{ item.target }}</span>
+            </p>
+            <span class="activity-time">{{ item.time }}</span>
+          </div>
+          <i class="pi {{ item.icon }} activity-item-icon" [style.color]="item.iconColor"></i>
+        </div>
+      }
+      <!-- Duplicate for seamless loop -->
+      @for (item of activities(); track item.id + '-dup') {
+        <div class="activity-item">
+          <div class="activity-avatar" [style.--avatar-color]="item.iconColor">
+            <span class="activity-initials">{{ item.initials }}</span>
+          </div>
+          <div class="activity-body">
+            <p class="activity-text">
+              <span class="activity-user">{{ item.user }}</span>
+              <span class="activity-action">{{ item.action }}</span>
+              <span class="activity-target">{{ item.target }}</span>
+            </p>
+            <span class="activity-time">{{ item.time }}</span>
+          </div>
+          <i class="pi {{ item.icon }} activity-item-icon" [style.color]="item.iconColor"></i>
+        </div>
+      }
+    </div>
+  </div>
+</div>

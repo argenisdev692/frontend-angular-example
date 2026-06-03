@@ -107,8 +107,20 @@
 
 /* Kanban board sits inside .content-card; board CSS handles its own scroll */
 
+.dashboard-bottom-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  align-items: start;
+}
+
 @media (max-width: 768px) {
   .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-bottom-grid {
     grid-template-columns: 1fr;
   }
 }
