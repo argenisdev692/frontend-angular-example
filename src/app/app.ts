@@ -1,10 +1,11 @@
-import { Component, AfterViewInit, ElementRef, viewChild, inject, PLATFORM_ID } from '@angular/core';
+import { Component, AfterViewInit, OnInit, ElementRef, viewChild, inject, PLATFORM_ID } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
 import { GradientBackgroundComponent } from './components/gradient-background/gradient-background.component';
 import { SessionTimeoutService } from './features/auth/services/session-timeout.service';
 import { AuthFeatureService } from './features/auth/services/auth.service';
 import { ThemeService } from './features/auth/services/theme.service';
+import { CompanyDataService } from './api/services/company-data.service';
 
 @Component({
   selector: 'app-root',
@@ -12,7 +13,7 @@ import { ThemeService } from './features/auth/services/theme.service';
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
-export class App implements AfterViewInit {
+export class App implements OnInit, AfterViewInit {
   protected readonly title = 'Aquashield Restoration LLC Dashboard';
 
   private cursorOrb = viewChild.required<ElementRef<HTMLDivElement>>('cursorOrb');
@@ -24,6 +25,21 @@ export class App implements AfterViewInit {
   private sessionTimeoutService = inject(SessionTimeoutService);
   // Initialize theme service early (applies .dark + data-theme from localStorage)
   private themeService = inject(ThemeService);
+  private companyDataService = inject(CompanyDataService);
+
+  ngOnInit(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      this.companyDataService.companyDataControllerFindPublic()
+        .then((data) => {
+          if (data?.companyName) {
+            document.title = data.companyName;
+          }
+        })
+        .catch(() => {
+          /* silently fail, keep default title */
+        });
+    }
+  }
 
   ngAfterViewInit() {
     if (isPlatformBrowser(this.platformId)) {
