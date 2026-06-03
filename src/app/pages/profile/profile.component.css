@@ -10,41 +10,6 @@
   margin: 0 auto;
 }
 
-.profile-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-8);
-  padding: var(--space-6) var(--space-8);
-  background: color-mix(in srgb, var(--bg-surface) 60%, transparent);
-  backdrop-filter: blur(20px);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-2xl);
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-}
-
-.page-title {
-  font-size: var(--text-3xl);
-  font-weight: var(--font-bold);
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.page-subtitle {
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-  margin: var(--space-1) 0 0 0;
-}
-
-::ng-deep .menu-toggle.p-button {
-  color: var(--text-primary);
-}
-
 .profile-loading,
 .profile-error {
   display: flex;

@@ -15,6 +15,8 @@ import { ApiConfiguration } from '../../api/api-configuration';
 import { UserResponse } from '../../api/models/user-response';
 import { UpdateProfileDto } from '../../api/models/update-profile-dto';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { PageHeaderComponent } from '../../components/page-header/page-header.component';
+import { FormSubmitButtonComponent } from '../../components/form-submit-button/form-submit-button.component';
 import { ImageCropperDialogComponent } from '../../components/image-cropper-dialog/image-cropper-dialog.component';
 
 @Component({
@@ -27,6 +29,8 @@ import { ImageCropperDialogComponent } from '../../components/image-cropper-dial
     PanelModule,
     ToastModule,
     SidebarComponent,
+    PageHeaderComponent,
+    FormSubmitButtonComponent,
     ImageCropperDialogComponent
   ],
   providers: [MessageService],

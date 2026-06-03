@@ -2,29 +2,10 @@
 <app-sidebar [visible]="drawerVisible()" (visibleChange)="drawerVisible.set($event)"></app-sidebar>
 
 <div class="profile-page">
-  <header class="profile-header">
-    <div class="header-left">
-      <p-button
-        type="button"
-        icon="pi pi-bars"
-        [text]="true"
-        [rounded]="true"
-        severity="secondary"
-        ariaLabel="Open menu"
-        styleClass="menu-toggle"
-        (onClick)="drawerVisible.set(true)" />
-      <div>
-        <h1 class="page-title">My Profile</h1>
-        <p class="page-subtitle">Manage your account and security settings</p>
-      </div>
-    </div>
-    <p-button
-      label="Back to Dashboard"
-      icon="pi pi-arrow-left"
-      [text]="true"
-      severity="secondary"
-      (onClick)="router.navigate(['/dashboard'])" />
-  </header>
+  <app-page-header
+    title="My Profile"
+    subtitle="Manage your account and security settings"
+    (menuToggle)="drawerVisible.set(true)" />
 
   @if (loading()) {
     <div class="profile-loading">
@@ -133,12 +114,11 @@
               </div>
             </div>
             <div class="form-actions">
-              <p-button
+              <app-form-submit-button
                 label="Save Changes"
-                icon="pi pi-check"
-                styleClass="btn-primary-modern"
+                icon="pi-check"
                 [loading]="savingProfile()"
-                (onClick)="saveProfile()" />
+                (clicked)="saveProfile()" />
             </div>
           </div>
         } @else {
