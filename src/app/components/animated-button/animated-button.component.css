@@ -98,12 +98,6 @@
 }
 
 .button-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.button-icon ::ng-deep svg {
-  width: var(--space-5);
-  height: var(--space-5);
+  font-size: var(--space-5);
+  line-height: 1;
 }

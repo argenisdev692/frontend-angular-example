@@ -71,16 +71,13 @@
 }
 
 .menu-icon {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   width: var(--space-5);
   height: var(--space-5);
-}
-
-.menu-icon ::ng-deep svg {
-  width: var(--space-5);
-  height: var(--space-5);
+  font-size: var(--text-base);
+  color: currentColor;
 }
 
 .menu-label {

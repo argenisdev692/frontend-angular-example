@@ -19,7 +19,7 @@
           [class]="getMenuItemClasses(item.active)"
           class="menu-item"
           [attr.aria-label]="item.label">
-          <span class="menu-icon" [innerHTML]="item.icon"></span>
+          <i class="menu-icon {{ item.icon }}"></i>
           <span class="menu-label">{{ item.label }}</span>
           @if (item.active) {
             <span class="menu-indicator"></span>

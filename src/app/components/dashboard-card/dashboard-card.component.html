@@ -1,7 +1,9 @@
 <div [class]="getCardClasses()" class="dashboard-card">
   <div class="card-header">
     @if (icon()) {
-      <div class="card-icon" [innerHTML]="icon()"></div>
+      <div class="card-icon">
+        <i class="pi {{ icon() }}"></i>
+      </div>
     }
     <div class="card-trend" [class]="getTrendClasses()">
       @if (trend() !== 'neutral') {
