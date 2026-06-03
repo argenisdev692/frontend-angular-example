@@ -1,0 +1,212 @@
+:host {
+  display: block;
+  font-family: var(--font-sans);
+  max-width: 100%;
+}
+
+/* ── BOARD ─────────────────────────────────── */
+.kanban-board {
+  display: flex;
+  gap: var(--space-5);
+  padding: var(--space-2);
+  overflow-x: auto;
+  align-items: flex-start;
+  max-width: 100%;
+}
+
+/* ── COLUMN ────────────────────────────────── */
+.kanban-col {
+  flex: 0 0 300px;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 9rem);
+  background: color-mix(in srgb, var(--bg-surface) 45%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-4);
+}
+
+.kanban-col__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-2) var(--space-4);
+}
+
+.kanban-col__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--col-accent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--col-accent) 60%, transparent);
+  flex-shrink: 0;
+}
+
+.kanban-col__title {
+  flex: 1;
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+}
+
+.kanban-col__count {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--text-primary) 6%, transparent);
+  padding: 2px 8px;
+  border-radius: var(--radius-xl);
+}
+
+.kanban-col__add {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-default);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+}
+.kanban-col__add svg { width: 14px; height: 14px; }
+.kanban-col__add:hover {
+  color: var(--col-accent);
+  border-color: color-mix(in srgb, var(--col-accent) 40%, transparent);
+  background: color-mix(in srgb, var(--col-accent) 12%, transparent);
+}
+
+.kanban-col__list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-height: 60px;
+  padding: var(--space-1);
+  overflow-y: auto;
+  border-radius: var(--radius-lg);
+  transition: background var(--transition), outline-color var(--transition);
+  outline: 1px dashed transparent;
+}
+
+/* ── CARD ──────────────────────────────────── */
+.kcard {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-left: 3px solid var(--col-accent, var(--accent-primary));
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  cursor: grab;
+  transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+}
+.kcard:hover {
+  border-color: color-mix(in srgb, var(--col-accent) 35%, var(--border-strong));
+  box-shadow: 0 8px 24px -8px color-mix(in srgb, var(--bg-void) 60%, transparent);
+}
+.kcard:active { cursor: grabbing; }
+
+.kcard__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
+.kcard__grip { color: var(--text-disabled); display: inline-flex; }
+
+.kcard__title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  line-height: 1.35;
+}
+
+.kcard__desc {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.kcard__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.kcard__tag {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--text-primary) 6%, transparent);
+  padding: 2px 8px;
+  border-radius: var(--radius-xl);
+}
+
+/* PrimeNG Avatar + Tag — themed to the palette */
+::ng-deep .kcard__avatar.p-avatar {
+  width: 26px;
+  height: 26px;
+  font-size: 11px;
+  font-weight: var(--font-semibold);
+  background: var(--grad-primary);
+  color: var(--on-accent);
+}
+::ng-deep .kcard__priority.p-tag {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+}
+
+/* ── EMPTY STATE ───────────────────────────── */
+.kanban-col__empty {
+  text-align: center;
+  color: var(--text-disabled);
+  font-size: var(--text-xs);
+  padding: var(--space-6);
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-lg);
+}
+
+/* ── CDK DRAG STATES ───────────────────────── */
+/* Floating element under the cursor */
+.cdk-drag-preview {
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 22px 50px -12px color-mix(in srgb, var(--bg-void) 80%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--accent-primary) 45%, transparent);
+  cursor: grabbing;
+}
+
+/* Gap left behind in the source column */
+.kcard__placeholder,
+.cdk-drag-placeholder {
+  min-height: 78px;
+  background: color-mix(in srgb, var(--accent-primary) 8%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--accent-primary) 45%, transparent);
+  border-radius: var(--radius-lg);
+}
+
+/* Smooth settle + sibling reflow */
+.cdk-drag-animating {
+  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.kanban-col__list.cdk-drop-list-dragging .kcard:not(.cdk-drag-placeholder) {
+  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Highlight a column that can receive the dragged card */
+.kanban-col__list.cdk-drop-list-receiving {
+  background: color-mix(in srgb, var(--accent-primary) 5%, transparent);
+  outline-color: color-mix(in srgb, var(--accent-primary) 30%, transparent);
+}
+
+@media (max-width: 768px) {
+  .kanban-col { flex-basis: 84vw; }
+}

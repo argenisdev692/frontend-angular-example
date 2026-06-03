@@ -1,0 +1,53 @@
+<div class="kanban-board">
+  @for (col of columns(); track col.id) {
+    <div class="kanban-col">
+      <div class="kanban-col__head">
+        <span class="kanban-col__dot" [style.--col-accent]="col.accent"></span>
+        <h3 class="kanban-col__title">{{ col.title }}</h3>
+        <span class="kanban-col__count">{{ col.cards.length }}</span>
+        <button class="kanban-col__add" aria-label="Add card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div
+        class="kanban-col__list"
+        cdkDropList
+        [cdkDropListData]="col.cards"
+        [id]="col.id"
+        (cdkDropListDropped)="drop($event)">
+        @for (card of col.cards; track card.id) {
+          <div class="kcard" cdkDrag [style.--col-accent]="col.accent">
+            <div class="kcard__top">
+              <p-tag
+                [value]="card.priority"
+                [severity]="prioritySeverity(card.priority)"
+                styleClass="kcard__priority" />
+              <span class="kcard__grip">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="9" cy="6" r="1.5" fill="currentColor" stroke="none"></circle>
+                  <circle cx="15" cy="6" r="1.5" fill="currentColor" stroke="none"></circle>
+                  <circle cx="9" cy="12" r="1.5" fill="currentColor" stroke="none"></circle>
+                  <circle cx="15" cy="12" r="1.5" fill="currentColor" stroke="none"></circle>
+                  <circle cx="9" cy="18" r="1.5" fill="currentColor" stroke="none"></circle>
+                  <circle cx="15" cy="18" r="1.5" fill="currentColor" stroke="none"></circle>
+                </svg>
+              </span>
+            </div>
+            <p class="kcard__title">{{ card.title }}</p>
+            <p class="kcard__desc">{{ card.description }}</p>
+            <div class="kcard__foot">
+              <span class="kcard__tag">{{ card.tag }}</span>
+              <p-avatar [label]="card.assigneeInitials" shape="circle" styleClass="kcard__avatar" />
+            </div>
+          </div>
+        } @empty {
+          <div class="kanban-col__empty">No tasks</div>
+        }
+      </div>
+    </div>
+  }
+</div>
