@@ -378,3 +378,271 @@ html {
     font-size: 15px;
   }
 }
+
+/* ═══════════════════════════════════════════════════════
+   SHARED CRUD STYLES
+   Reusable paginator, table, action buttons & empty state
+   Use on any CRUD list page without duplication
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Paginator (apply styleClass="modern-paginator") ── */
+.modern-paginator {
+  background: transparent;
+  border: none;
+  padding: var(--space-4) 0 0;
+  gap: var(--space-2);
+}
+
+.modern-paginator .p-paginator-current {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+}
+
+.modern-paginator .p-paginator-page,
+.modern-paginator .p-paginator-first,
+.modern-paginator .p-paginator-prev,
+.modern-paginator .p-paginator-next,
+.modern-paginator .p-paginator-last {
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--bg-elevated) 40%, transparent);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  min-width: 38px;
+  height: 38px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.modern-paginator .p-paginator-page:hover,
+.modern-paginator .p-paginator-first:hover,
+.modern-paginator .p-paginator-prev:hover,
+.modern-paginator .p-paginator-next:hover,
+.modern-paginator .p-paginator-last:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+  box-shadow:
+    0 4px 12px color-mix(in srgb, var(--accent-primary) 15%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--accent-primary) 20%, transparent);
+}
+
+.modern-paginator .p-paginator-page.p-highlight {
+  background: var(--grad-primary);
+  color: #ffffff;
+  border-color: rgba(0, 181, 226, 0.4);
+  font-weight: var(--font-semibold);
+  box-shadow:
+    0 4px 16px color-mix(in srgb, var(--accent-primary) 40%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.modern-paginator .p-paginator-first.p-disabled,
+.modern-paginator .p-paginator-prev.p-disabled,
+.modern-paginator .p-paginator-next.p-disabled,
+.modern-paginator .p-paginator-last.p-disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+/* Paginator dropdown */
+.modern-paginator .p-dropdown {
+  background: color-mix(in srgb, var(--bg-elevated) 40%, transparent);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--input-radius);
+  color: var(--text-primary);
+  height: var(--input-height);
+  min-width: 80px;
+  align-items: center;
+  transition: all var(--transition);
+}
+
+.modern-paginator .p-dropdown:hover {
+  border-color: var(--border-strong);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-primary) 15%, transparent);
+}
+
+.modern-paginator .p-dropdown .p-dropdown-label {
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  padding: 0 var(--space-3);
+  line-height: var(--input-height);
+}
+
+.modern-paginator .p-dropdown .p-dropdown-trigger {
+  color: var(--text-muted);
+  width: 2rem;
+  transition: color var(--transition);
+}
+
+.modern-paginator .p-dropdown:hover .p-dropdown-trigger {
+  color: var(--accent-primary);
+}
+
+.modern-paginator .p-dropdown .p-dropdown-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.3),
+    0 0 0 1px color-mix(in srgb, var(--accent-primary) 10%, transparent);
+}
+
+.modern-paginator .p-dropdown .p-dropdown-items {
+  padding: var(--space-1) 0;
+}
+
+.modern-paginator .p-dropdown .p-dropdown-item {
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  margin: 0 var(--space-1);
+  transition: all var(--transition);
+}
+
+.modern-paginator .p-dropdown .p-dropdown-item:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.modern-paginator .p-dropdown .p-dropdown-item.p-highlight {
+  background: color-mix(in srgb, var(--accent-primary) 18%, transparent);
+  color: var(--accent-primary);
+  font-weight: var(--font-medium);
+}
+
+/* ── CRUD Data Table ── */
+.crud-table .p-datatable {
+  background: transparent;
+}
+
+.crud-table .p-datatable .p-datatable-thead > tr > th {
+  background: transparent;
+  border-bottom: 1px solid var(--border-default);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: var(--space-3) var(--space-4);
+}
+
+.crud-table .p-datatable .p-datatable-tbody > tr {
+  background: transparent;
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background var(--transition);
+}
+
+.crud-table .p-datatable .p-datatable-tbody > tr:hover {
+  background: color-mix(in srgb, var(--bg-overlay) 40%, transparent);
+}
+
+.crud-table .p-datatable .p-datatable-tbody > tr > td {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  padding: var(--space-3) var(--space-4);
+}
+
+.crud-table .p-datatable .p-datatable-tbody > tr.trashed > td,
+.crud-table .p-datatable .p-datatable-tbody > tr.deleted > td,
+.crud-table .p-datatable .p-datatable-tbody > tr.suspended > td {
+  color: var(--text-muted);
+}
+
+/* ── CRUD Action Buttons ── */
+.btn-crud-action {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: color-mix(in srgb, var(--bg-elevated) 50%, transparent);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition);
+  overflow: hidden;
+}
+
+.btn-crud-action::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: currentColor;
+  opacity: 0;
+  border-radius: inherit;
+  transition: opacity var(--transition);
+}
+
+.btn-crud-action:hover {
+  transform: scale(1.15);
+  border-color: currentColor;
+}
+
+.btn-crud-action:hover::after {
+  opacity: 0.1;
+}
+
+.btn-crud-action:active {
+  transform: scale(0.95);
+}
+
+.btn-crud-action-view { color: var(--accent-info); }
+.btn-crud-action-view:hover { box-shadow: 0 0 12px color-mix(in srgb, var(--accent-info) 30%, transparent); }
+
+.btn-crud-action-edit { color: var(--accent-primary); }
+.btn-crud-action-edit:hover { box-shadow: 0 0 12px color-mix(in srgb, var(--accent-primary) 30%, transparent); }
+
+.btn-crud-action-delete { color: var(--accent-error); }
+.btn-crud-action-delete:hover { box-shadow: 0 0 12px color-mix(in srgb, var(--accent-error) 30%, transparent); }
+
+.btn-crud-action-restore { color: var(--accent-success); }
+.btn-crud-action-restore:hover { box-shadow: 0 0 12px color-mix(in srgb, var(--accent-success) 30%, transparent); }
+
+.btn-crud-action svg {
+  width: 14px;
+  height: 14px;
+  z-index: 1;
+}
+
+/* ── Empty State ── */
+.crud-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-muted);
+  padding: var(--space-12) var(--space-4);
+}
+
+.crud-empty-state svg {
+  width: 40px;
+  height: 40px;
+  opacity: 0.5;
+}
+
+.crud-empty-state p {
+  margin: 0;
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
+}
+
+.crud-empty-state span {
+  font-size: var(--text-sm);
+}
+
+/* ── Loading Overlay ── */
+.crud-loading-overlay {
+  background: color-mix(in srgb, var(--bg-base) 60%, transparent);
+  backdrop-filter: blur(4px);
+}

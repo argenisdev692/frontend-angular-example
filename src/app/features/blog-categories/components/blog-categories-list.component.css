@@ -1,4 +1,4 @@
-.users-page {
+.categories-page {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
@@ -31,39 +31,13 @@
   letter-spacing: 0.05em;
 }
 
-.status-suspended {
+.status-deleted {
   background: color-mix(in srgb, var(--accent-error) 15%, transparent);
   color: var(--accent-error);
   border: 1px solid color-mix(in srgb, var(--accent-error) 25%, transparent);
 }
 
-.roles-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1);
-}
-
-.role-chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--accent-primary) 12%, transparent);
-  color: var(--accent-primary);
-  font-size: 11px;
-  font-weight: var(--font-medium);
-}
-
 .text-muted {
   color: var(--text-muted);
-}
-
-/* ── Actions ───────────────────────────────── */
-.btn-crud-action-permissions {
-  color: var(--accent-warning);
-}
-
-.btn-crud-action-permissions:hover {
-  box-shadow: 0 0 12px color-mix(in srgb, var(--accent-warning) 30%, transparent);
 }
 

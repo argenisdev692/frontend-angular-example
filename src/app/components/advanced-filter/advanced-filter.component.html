@@ -44,10 +44,11 @@
       </button>
     }
     @if (showCreate()) {
-      <button class="btn btn--primary" type="button" (click)="create.emit()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
-        <span>{{ createLabel() }}</span>
-      </button>
+      <app-animated-button
+        [text]="createLabel()"
+        variant="primary"
+        icon="pi-plus"
+        (onClick)="create.emit()" />
     }
   </div>
 

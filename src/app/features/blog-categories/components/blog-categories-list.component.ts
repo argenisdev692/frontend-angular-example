@@ -1,11 +1,10 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { Router } from '@angular/router';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { PaginatorModule } from 'primeng/paginator';
 
-import { UsersFeatureService } from '../services/users-feature.service';
+import { BlogCategoriesFeatureService } from '../services/blog-categories-feature.service';
 import {
   AdvancedFilterComponent,
   FilterField,
@@ -15,7 +14,7 @@ import { SidebarComponent } from '../../../components/sidebar/sidebar.component'
 import { CrudListBase } from '../../../shared/crud-list-base';
 
 @Component({
-  selector: 'app-users-list',
+  selector: 'app-blog-categories-list',
   standalone: true,
   imports: [
     CommonModule,
@@ -27,27 +26,27 @@ import { CrudListBase } from '../../../shared/crud-list-base';
     PageHeaderComponent,
     SidebarComponent,
   ],
-  templateUrl: './users-list.component.html',
-  styleUrl: './users-list.component.css',
+  templateUrl: './blog-categories-list.component.html',
+  styleUrl: './blog-categories-list.component.css',
 })
-export class UsersListComponent extends CrudListBase<any> {
-  private api = inject(UsersFeatureService);
+export class BlogCategoriesListComponent extends CrudListBase<any> {
+  private api = inject(BlogCategoriesFeatureService);
 
   override get service() {
     return this.api;
   }
 
   get entityName(): string {
-    return 'user';
+    return 'category';
   }
   get newRoute(): string {
-    return '/users/new';
+    return '/blog-categories/new';
   }
   get viewRoutePrefix(): string {
-    return '/users';
+    return '/blog-categories';
   }
   get editRoutePrefix(): string {
-    return '/users';
+    return '/blog-categories';
   }
 
   get filterFields(): FilterField[] {
@@ -64,7 +63,7 @@ export class UsersListComponent extends CrudListBase<any> {
         type: 'select',
         options: [
           { label: 'Active', value: 'active' },
-          { label: 'Suspended', value: 'suspended' },
+          { label: 'Deleted', value: 'deleted' },
           { label: 'All', value: 'all' },
         ],
         placeholder: 'All',
@@ -75,9 +74,7 @@ export class UsersListComponent extends CrudListBase<any> {
   get tableColumns() {
     return [
       { field: 'name', header: 'Name', sortable: true },
-      { field: 'email', header: 'Email', sortable: true },
-      { field: 'phone', header: 'Phone', sortable: false },
-      { field: 'roles', header: 'Roles', sortable: false },
+      { field: 'description', header: 'Description', sortable: false },
       { field: 'createdAt', header: 'Created', sortable: true },
     ];
   }
@@ -88,13 +85,9 @@ export class UsersListComponent extends CrudListBase<any> {
     filters: Record<string, unknown>
   ): Record<string, unknown> {
     const params: Record<string, unknown> = {
-      page,
+      skip: (page - 1) * limit,
       limit,
     };
-
-    if (filters['search']) {
-      params['search'] = filters['search'];
-    }
 
     const dateRange = filters['dateRange'] as Date[] | undefined;
     if (dateRange?.[0]) {
@@ -107,7 +100,7 @@ export class UsersListComponent extends CrudListBase<any> {
     const status = filters['status'] as string | undefined;
     if (status === 'all') {
       params['withTrashed'] = true;
-    } else if (status === 'suspended') {
+    } else if (status === 'deleted') {
       params['onlyTrashed'] = true;
     }
 
@@ -115,27 +108,18 @@ export class UsersListComponent extends CrudListBase<any> {
   }
 
   extractItems(response: any): any[] {
-    return response?.data ?? [];
+    return response ?? [];
   }
 
   extractTotal(response: any): number {
-    return response?.total ?? 0;
+    return (response ?? []).length;
   }
 
   // ── Aliases for template compatibility ──
-  readonly users = this.items;
-  readonly usersResource = this.dataResource;
+  readonly categories = this.items;
+  readonly categoriesResource = this.dataResource;
 
-  // ── User-specific helpers ──
-  getRoleNames(user: any): string {
-    return user.roles?.map((r: any) => r.name).join(', ') ?? '—';
-  }
-
-  isSuspended(user: any): boolean {
-    return this.isTrashed(user);
-  }
-
-  onManagePermissions(id: string): void {
-    this.router.navigate(['/users', id, 'permissions']);
+  isDeleted(category: any): boolean {
+    return this.isTrashed(category);
   }
 }

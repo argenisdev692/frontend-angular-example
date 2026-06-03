@@ -1,5 +1,6 @@
 import { Component, inject, signal, computed, resource } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ButtonModule } from 'primeng/button';
@@ -23,6 +24,7 @@ interface PermissionModuleGroup {
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     CheckboxModule,
     ButtonModule,
     ToastModule,

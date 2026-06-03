@@ -10,6 +10,7 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { DatePickerModule } from 'primeng/datepicker';
 import { SelectModule } from 'primeng/select';
+import { AnimatedButtonComponent } from '../animated-button/animated-button.component';
 
 export interface FilterOption {
   label: string;
@@ -32,7 +33,7 @@ export interface FilterCriteria {
 @Component({
   selector: 'app-advanced-filter',
   standalone: true,
-  imports: [CommonModule, FormsModule, DatePickerModule, SelectModule],
+  imports: [CommonModule, FormsModule, DatePickerModule, SelectModule, AnimatedButtonComponent],
   templateUrl: './advanced-filter.component.html',
   styleUrl: './advanced-filter.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

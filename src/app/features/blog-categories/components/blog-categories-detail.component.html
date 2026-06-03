@@ -1,0 +1,92 @@
+<app-sidebar [visible]="drawerVisible()" (visibleChange)="drawerVisible.set($event)"></app-sidebar>
+
+<div class="categories-page">
+  <app-page-header
+    [title]="category()?.name ?? 'Category Detail'"
+    subtitle="View blog category information"
+    (menuToggle)="drawerVisible.set(true)" />
+
+  <div class="detail-header">
+    <button class="btn btn--ghost" type="button" (click)="onBack()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      <span>Back to Categories</span>
+    </button>
+    <div class="detail-actions">
+      <button class="btn btn--ghost" type="button" (click)="onEdit()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        <span>Edit</span>
+      </button>
+      @if (isDeleted()) {
+        <button class="btn btn--success" type="button" (click)="onRestore()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+          <span>Restore</span>
+        </button>
+      } @else {
+        <button class="btn btn--danger" type="button" (click)="onDelete()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          <span>Delete</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (category(); as c) {
+    <div class="card-modern detail-card">
+      <div class="detail-hero">
+        @if (c.image) {
+          <div class="category-image">
+            <img [src]="c.image" [alt]="c.name ?? 'Category image'" />
+          </div>
+        } @else {
+          <div class="category-avatar">
+            <span>{{ (c.name ?? '?').charAt(0).toUpperCase() }}</span>
+          </div>
+        }
+        <div class="hero-info">
+          <h2>{{ c.name ?? 'Unnamed Category' }}</h2>
+          @if (isDeleted()) {
+            <span class="status-badge status-deleted">Deleted</span>
+          } @else {
+            <span class="status-badge status-active">Active</span>
+          }
+        </div>
+      </div>
+
+      <div class="detail-grid">
+        <div class="detail-section">
+          <h3>Details</h3>
+          <div class="detail-row">
+            <span class="label">Description</span>
+            <span class="value">{{ c.description ?? '—' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Created</span>
+            <span class="value">{{ c.createdAt | date:'mediumDate' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Updated</span>
+            <span class="value">{{ c.updatedAt | date:'mediumDate' }}</span>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Metadata</h3>
+          <div class="detail-row">
+            <span class="label">ID</span>
+            <span class="value">{{ c.id }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">User ID</span>
+            <span class="value">{{ c.userId }}</span>
+          </div>
+          @if (c.deletedAt) {
+            <div class="detail-row">
+              <span class="label">Deleted</span>
+              <span class="value">{{ c.deletedAt | date:'mediumDate' }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>
