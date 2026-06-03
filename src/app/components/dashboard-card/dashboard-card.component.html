@@ -1,0 +1,26 @@
+<div [class]="getCardClasses()" class="dashboard-card">
+  <div class="card-header">
+    @if (icon()) {
+      <div class="card-icon" [innerHTML]="icon()"></div>
+    }
+    <div class="card-trend" [class]="getTrendClasses()">
+      @if (trend() !== 'neutral') {
+        <svg class="trend-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          @if (trend() === 'up') {
+            <path d="M18 15l-6-6-6 6"/>
+          } @else {
+            <path d="M6 9l6 6 6-6"/>
+          }
+        </svg>
+        <span>{{ trendValue() }}</span>
+      }
+    </div>
+  </div>
+  <div class="card-content">
+    <h3 class="card-title">{{ title() }}</h3>
+    <p class="card-value">{{ value() }}</p>
+    @if (subtitle()) {
+      <p class="card-subtitle">{{ subtitle() }}</p>
+    }
+  </div>
+</div>

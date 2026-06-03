@@ -1,0 +1,10 @@
+{
+  "input": "${API_BASE_URL}",
+  "output": "./src/app/api",
+  "excludeTags": ["auth:2fa"],
+  "promises": true,
+  "services": true,
+  "enumStyle": "alias",
+  "ignoreUnusedModels": true,
+  "removeStaleFiles": true
+}

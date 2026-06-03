@@ -1,0 +1,174 @@
+.user-menu-wrapper {
+  position: relative;
+}
+
+.user-menu-trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: color-mix(in srgb, var(--bg-elevated) 60%, transparent);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  transition: all var(--transition);
+  color: var(--on-accent);
+}
+
+.user-menu-trigger:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
+}
+
+.user-menu-photo {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--border-default);
+}
+
+.user-menu-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--grad-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  border: 2px solid var(--border-default);
+}
+
+.user-menu-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.user-menu-name {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.user-menu-role {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  line-height: 1.2;
+}
+
+.user-menu-chevron {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-left: var(--space-1);
+}
+
+@media (max-width: 768px) {
+  .user-menu-info {
+    display: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   USER DROPDOWN MENU (PrimeNG p-menu popup, appended to body)
+   ═══════════════════════════════════════════════════════ */
+::ng-deep .user-dropdown-menu.p-menu {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--bg-void) 60%, transparent);
+  padding: var(--space-1);
+  min-width: 200px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+::ng-deep .user-dropdown-menu .p-menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+::ng-deep .user-dropdown-menu .p-menu-item {
+  border-radius: var(--radius-lg);
+}
+
+::ng-deep .user-dropdown-menu .p-menu-item-content {
+  border-radius: var(--radius-lg);
+}
+
+::ng-deep .user-dropdown-menu .p-menu-item-link,
+::ng-deep .user-dropdown-menu .p-menu-item-content button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: all var(--transition);
+  border-radius: var(--radius-lg);
+}
+
+::ng-deep .user-dropdown-menu .p-menu-item-link:hover,
+::ng-deep .user-dropdown-menu .p-menu-item-content button:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+::ng-deep .user-dropdown-menu .p-menu-item-icon {
+  color: var(--text-muted);
+  font-size: var(--text-base);
+  width: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+::ng-deep .user-dropdown-menu .p-menu-item-link:hover .p-menu-item-icon {
+  color: var(--text-primary);
+}
+
+::ng-deep .user-dropdown-menu .p-menu-item-label {
+  flex: 1;
+}
+
+/* Separator line */
+::ng-deep .user-dropdown-menu .p-menu-separator {
+  height: 1px;
+  background: var(--border-default);
+  margin: var(--space-1) 0;
+}
+
+/* Logout item - danger / destructive styling */
+::ng-deep .user-dropdown-menu .menu-item-logout .p-menu-item-link,
+::ng-deep .user-dropdown-menu .menu-item-logout button {
+  color: var(--accent-error);
+}
+
+::ng-deep .user-dropdown-menu .menu-item-logout .p-menu-item-icon {
+  color: var(--accent-error);
+}
+
+::ng-deep .user-dropdown-menu .menu-item-logout:hover .p-menu-item-link,
+::ng-deep .user-dropdown-menu .menu-item-logout:hover button {
+  background: color-mix(in srgb, var(--accent-error) 12%, transparent);
+  color: var(--accent-error);
+}
+
+::ng-deep .user-dropdown-menu .menu-item-logout:hover .p-menu-item-icon {
+  color: var(--accent-error);
+}

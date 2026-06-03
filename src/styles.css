@@ -1,0 +1,308 @@
+/* You can add global styles to this file, and also import other style files */
+
+@import 'tailwindcss';
+
+/* PrimeNG Icons */
+@import 'primeicons/primeicons.css';
+
+/* ═══════════════════════════════════════════════════════
+   GLOBAL DESIGN TOKENS
+   CSS Custom Properties for consistent theming
+   Palette: Navy #0C2340 + Aqua #00B5E2 (dark minimal 2026)
+   ═══════════════════════════════════════════════════════ */
+
+:root {
+  /* Backgrounds */
+  --bg-void: #050A14;
+  --bg-base: #060D18;
+  --bg-surface: #0C2340;
+  --bg-elevated: #0C2340;
+  --bg-overlay: #1B3556;
+  --bg-app: var(--bg-base);
+  --bg-card: var(--bg-elevated);
+  --bg-hover: var(--bg-overlay);
+  --bg-subtle: color-mix(in srgb, var(--bg-elevated) 70%, var(--bg-base));
+
+  /* Brand Colors (drive the mesh + gradients) */
+  --blue-500: #0085C7;
+  --purple-500: #0E7CA8;
+  --purple-600: #0B5E80;
+  --blue-400: var(--blue-500);
+
+  /* Text Colors */
+  --text-primary: #E8EDF2;
+  --text-secondary: #8A95A5;
+  --text-muted: #5E6A7A;
+  --text-disabled: #3D4757;
+
+  /* Border Colors */
+  --border-subtle: rgba(232, 237, 242, 0.06);
+  --border-default: rgba(232, 237, 242, 0.10);
+  --border-strong: rgba(232, 237, 242, 0.18);
+  --border-hover: var(--border-strong);
+
+  /* Accent Colors */
+  --accent-primary: #00B5E2;
+  --accent-secondary: #0091C7;
+  --on-accent: #04222F; /* text/icon color to use ON aqua surfaces */
+  --accent-success: #10b981;
+  --accent-success-dark: #059669;
+  --accent-warning: #f59e0b;
+  --accent-warning-dark: #d97706;
+  --accent-error: #ef4444;
+  --accent-info: #2BA8D9;
+
+  /* Gradients */
+  --grad-primary: linear-gradient(135deg, #00B5E2, #0091C7);
+  --grad-success: linear-gradient(135deg, #10b981, #059669);
+  --grad-warning: linear-gradient(135deg, #f59e0b, #d97706);
+  --grad-info: linear-gradient(135deg, #2BA8D9, #0E7CA8);
+  --grad-text: linear-gradient(90deg, #00B5E2, #38CFF0);
+
+  /* Typography */
+  --font-sans: "Exo", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+
+  /* Font sizes - scale */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+
+  /* Font weights */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+
+  /* Spacing System */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+
+  /* Transitions */
+  --transition: 0.2s ease;
+  --transition-fast: 0.1s ease;
+  --transition-slow: 0.3s ease;
+
+  /* Input Tokens */
+  --input-bg: var(--bg-elevated);
+  --input-bg-disabled: color-mix(in srgb, var(--bg-elevated) 50%, var(--bg-base));
+  --input-border: var(--border-default);
+  --input-border-hover: var(--border-strong);
+  --input-border-focus: var(--accent-primary);
+  --input-height: 44px;
+  --input-radius: var(--radius-md);
+
+  /* Glow Effects */
+  --glow-primary: 0 0 20px color-mix(in srgb, var(--accent-primary) 20%, transparent);
+  --glow-success: 0 0 20px color-mix(in srgb, var(--accent-success) 20%, transparent);
+  --glow-warning: 0 0 20px color-mix(in srgb, var(--accent-warning) 20%, transparent);
+}
+
+/* Light Mode Override */
+[data-theme="light"] {
+  --bg-void: #F2F6FA;
+  --bg-base: #FFFFFF;
+  --bg-surface: #EEF3F8;
+  --bg-elevated: #EEF3F8;
+  --bg-overlay: #DDE6EF;
+  --bg-app: var(--bg-base);
+  --bg-card: var(--bg-elevated);
+  --bg-hover: #DDE6EF;
+  --bg-subtle: color-mix(in srgb, var(--bg-elevated) 72%, var(--bg-base));
+  --text-primary: #0C2340;
+  --text-secondary: #44566B;
+  --text-muted: #6B7A8D;
+  --text-disabled: #9AA7B5;
+  --border-subtle: rgba(12, 35, 64, 0.06);
+  --border-default: rgba(12, 35, 64, 0.12);
+  --border-strong: rgba(12, 35, 64, 0.22);
+}
+
+/* ═══════════════════════════════════════════════════════
+   ANIMATIONS
+   ═══════════════════════════════════════════════════════ */
+
+@keyframes mesh-drift {
+  0% { background-position: 0% 50%; }
+  33% { background-position: 100% 30%; }
+  66% { background-position: 50% 80%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes orbs-float {
+  0% { transform: translate(0px, 0px) scale(1); }
+  25% { transform: translate(20px, -15px) scale(1.05); }
+  50% { transform: translate(-10px, 25px) scale(0.97); }
+  75% { transform: translate(15px, 10px) scale(1.03); }
+  100% { transform: translate(-5px, -20px) scale(1.01); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px color-mix(in srgb, var(--accent-primary) 30%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 40px color-mix(in srgb, var(--accent-primary) 60%, transparent);
+  }
+}
+
+@keyframes gradient-x {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes gradient-y {
+  0%, 100% { background-position: 50% 0%; }
+  50% { background-position: 50% 100%; }
+}
+
+@keyframes gradient-xy {
+  0%, 100% { background-position: 0% 0%; }
+  25% { background-position: 100% 0%; }
+  50% { background-position: 100% 100%; }
+  75% { background-position: 0% 100%; }
+}
+
+@keyframes button-shine {
+  0% { transform: translateX(-100%) rotate(45deg); }
+  100% { transform: translateX(200%) rotate(45deg); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+/* ═══════════════════════════════════════════════════════
+   ACCESSIBILITY
+   ═══════════════════════════════════════════════════════ */
+
+:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   CUSTOM SCROLLBAR (Dark Theme)
+   ═══════════════════════════════════════════════════════ */
+
+html {
+  scrollbar-color: var(--accent-secondary) var(--bg-base);
+  scrollbar-width: thin;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-base);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--accent-primary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--accent-secondary);
+}
+
+/* ═══════════════════════════════════════════════════════
+   DEEP NAVY GRAIN EFFECT
+═══════════════════════════════════════════════════════ */
+
+/* Deep Navy background with grain effect */
+.deep-navy-grain {
+  background: var(--bg-void);
+  background-image:
+    radial-gradient(ellipse at 15% 20%, color-mix(in srgb, var(--blue-500) 40%, transparent) 0px, transparent 55%),
+    radial-gradient(ellipse at 80% 10%, color-mix(in srgb, var(--blue-400) 28%, transparent) 0px, transparent 50%),
+    radial-gradient(ellipse at 5% 65%, color-mix(in srgb, var(--bg-surface) 55%, transparent) 0px, transparent 60%),
+    radial-gradient(ellipse at 70% 70%, color-mix(in srgb, var(--purple-500) 22%, transparent) 0px, transparent 55%),
+    radial-gradient(ellipse at 40% 40%, color-mix(in srgb, var(--accent-primary) 18%, transparent) 0px, transparent 45%),
+    radial-gradient(ellipse at 90% 80%, color-mix(in srgb, var(--accent-secondary) 25%, transparent) 0px, transparent 40%),
+    radial-gradient(ellipse at 20% 85%, color-mix(in srgb, var(--bg-surface) 40%, transparent) 0px, transparent 55%);
+  background-size: 400% 400%;
+  animation: mesh-drift 14s ease infinite;
+  position: relative;
+  min-height: 100vh;
+}
+
+/* Glow orbs layer */
+.deep-navy-grain::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 25% 35%, color-mix(in srgb, var(--blue-500) 35%, transparent) 0px, transparent 38%),
+    radial-gradient(circle at 75% 25%, color-mix(in srgb, var(--accent-primary) 25%, transparent) 0px, transparent 32%),
+    radial-gradient(circle at 15% 75%, color-mix(in srgb, var(--purple-500) 30%, transparent) 0px, transparent 35%),
+    radial-gradient(circle at 80% 70%, color-mix(in srgb, var(--purple-600) 20%, transparent) 0px, transparent 30%);
+  filter: blur(40px);
+  animation: orbs-float 18s ease-in-out infinite alternate;
+}
+
+/* Noise grain layer */
+.deep-navy-grain::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)' opacity='1'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  opacity: 0.045;
+  mix-blend-mode: overlay;
+}
+
+/* Cursor orb effect */
+.cursor-orb {
+  position: fixed;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent-primary) 18%, transparent) 0%, transparent 70%);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+  transition: left 0.12s ease-out, top 0.12s ease-out;
+  filter: blur(2px);
+}

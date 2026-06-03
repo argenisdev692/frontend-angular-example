@@ -1,0 +1,269 @@
+.sidebar {
+  width: 16rem;
+  height: 100vh;
+  background: color-mix(in srgb, var(--bg-base) 80%, transparent);
+  backdrop-filter: blur(20px);
+  border-right: 1px solid var(--border-default);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 100;
+}
+
+.sidebar-header {
+  padding: var(--space-6);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-family: var(--font-sans);
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+}
+
+.logo-img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-slow);
+  position: relative;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+}
+
+.menu-item:hover {
+  background: color-mix(in srgb, var(--text-primary) 5%, transparent);
+  color: var(--text-primary);
+}
+
+.menu-item.active {
+  background: color-mix(in srgb, var(--accent-primary) 20%, transparent);
+  color: var(--text-primary);
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 30%, transparent);
+}
+
+.menu-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-5);
+  height: var(--space-5);
+}
+
+.menu-icon ::ng-deep svg {
+  width: var(--space-5);
+  height: var(--space-5);
+}
+
+.menu-label {
+  flex: 1;
+  text-align: left;
+}
+
+.menu-indicator {
+  position: absolute;
+  right: var(--space-2);
+  width: var(--space-1);
+  height: var(--space-6);
+  background: var(--grad-primary);
+  border-radius: var(--space-1);
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.sidebar-footer {
+  padding: var(--space-6);
+  border-top: 1px solid var(--border-default);
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: var(--space-2);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition);
+}
+
+.user-profile:hover {
+  background: color-mix(in srgb, var(--text-primary) 5%, transparent);
+}
+
+.user-avatar {
+  width: var(--space-10);
+  height: var(--space-10);
+  border-radius: var(--radius-lg);
+  background: var(--grad-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-sans);
+  font-weight: var(--font-semibold);
+  font-size: var(--text-sm);
+  color: var(--on-accent);
+  flex-shrink: 0;
+}
+
+.user-avatar-photo {
+  width: var(--space-10);
+  height: var(--space-10);
+  border-radius: var(--radius-lg);
+  object-fit: cover;
+  border: 2px solid var(--border-default);
+  flex-shrink: 0;
+}
+
+.user-info {
+  flex: 1;
+}
+
+.user-name {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.user-role {
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* ── PrimeNG Drawer mask & panel ───────── */
+::ng-deep .app-drawer.p-drawer {
+  width: 16rem;
+  background: color-mix(in srgb, var(--bg-base) 92%, transparent);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid var(--border-default);
+}
+
+::ng-deep .app-drawer .p-drawer-header {
+  padding: var(--space-6);
+  border-bottom: 1px solid var(--border-default);
+}
+
+::ng-deep .app-drawer .p-drawer-content {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+::ng-deep .app-drawer .p-drawer-footer {
+  padding: var(--space-6);
+  border-top: 1px solid var(--border-default);
+}
+
+/* Flatten the PrimeNG Menu so the existing .menu-item styling is preserved */
+::ng-deep .app-drawer .drawer-menu.p-menu {
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+::ng-deep .app-drawer .drawer-menu .p-menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+::ng-deep .app-drawer .drawer-menu .p-menu-item-content,
+::ng-deep .app-drawer .drawer-menu .p-menu-item-content:hover {
+  background: transparent;
+  border-radius: var(--radius-lg);
+}
+
+::ng-deep .app-drawer .drawer-menu .menu-item {
+  width: 100%;
+}
+
+/* Theme toggle row in footer */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-default);
+}
+
+.theme-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.theme-toggle-label i {
+  font-size: var(--text-base);
+  color: var(--accent-primary);
+}
+
+/* PrimeNG ToggleSwitch inside sidebar footer - subtle integration */
+::ng-deep .theme-toggle .p-toggleswitch {
+  --p-toggleswitch-width: 2.75rem;
+  --p-toggleswitch-height: 1.5rem;
+}
+
+::ng-deep .theme-toggle .p-toggleswitch .p-toggleswitch-slider {
+  background: var(--border-default);
+  border: 1px solid var(--border-default);
+}
+
+::ng-deep .theme-toggle .p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-slider {
+  background: var(--grad-primary);
+  border-color: var(--border-strong);
+}
+
+::ng-deep .theme-toggle .p-toggleswitch .p-toggleswitch-handle {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  /* Center the circle vertically inside the smaller slider track */
+  top: 50%;
+  transform: translateY(-50%);
+  width: calc(var(--p-toggleswitch-height, 1.5rem) - 4px);
+  height: calc(var(--p-toggleswitch-height, 1.5rem) - 4px);
+}
+
+/* Ensure the handle translates fully to the right when checked */
+::ng-deep .theme-toggle .p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-handle {
+  transform: translateX(calc(var(--p-toggleswitch-width, 2.75rem) - var(--p-toggleswitch-height, 1.5rem))) translateY(-50%);
+}

@@ -1,0 +1,262 @@
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <img src="/Logo%20PNG-WHITE.png" alt="AquaShield Logo" class="login-logo" />
+      <h1 class="login-title">Welcome Back</h1>
+      <p class="login-subtitle">Sign in to your account</p>
+    </div>
+
+    <nav class="auth-tabs">
+      <button type="button" class="auth-tab" [class.active]="authMethod() === 'password'" (click)="setAuthMethod('password')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Password
+      </button>
+      <button type="button" class="auth-tab" [class.active]="authMethod() === 'email_otp'" (click)="setAuthMethod('email_otp')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Email code
+      </button>
+      <button type="button" class="auth-tab" [class.active]="authMethod() === 'totp'" (click)="setAuthMethod('totp')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Authenticator
+      </button>
+    </nav>
+
+    <div class="tab-content" [class.fade-in]="true">
+      @if (!forgotPasswordMode()) {
+        @if (successMessage()) {
+          <div class="success-banner">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <span>{{ successMessage() }}</span>
+          </div>
+        }
+        @if (errorMessage()) {
+          <p-message severity="error" styleClass="alert alert-error">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span>{{ errorMessage() }}</span>
+          </p-message>
+        }
+
+        @switch (authMethod()) {
+        @case ('password') {
+          <form (submit)="onPasswordSubmit($event)" class="login-form">
+            <div class="form-group">
+              <div class="input-wrapper">
+                <input pInputText type="email" [value]="email()" (input)="updateEmail($event)"
+                  placeholder=" " class="form-input" [class.error]="emailError" id="email" autocomplete="email" />
+                <label for="email" class="form-label">Email Address</label>
+                <div class="input-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                </div>
+              </div>
+              @if (emailError) { <span class="error-message">{{ emailError }}</span> }
+            </div>
+            <div class="form-group">
+              <div class="input-wrapper">
+                <input pInputText [type]="showPassword() ? 'text' : 'password'" [value]="password()"
+                  (input)="updatePassword($event)" placeholder=" " class="form-input" [class.error]="passwordError"
+                  id="password" autocomplete="current-password" />
+                <label for="password" class="form-label">Password</label>
+                <button type="button" (click)="togglePasswordVisibility()" class="toggle-password" aria-label="Toggle password">
+                  @if (showPassword()) {
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                  } @else {
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  }
+                </button>
+              </div>
+              @if (passwordError) { <span class="error-message">{{ passwordError }}</span> }
+            </div>
+            <div class="form-row-between">
+              <label class="remember-me" (click)="toggleRememberMe()" [class.checked]="rememberMe()">
+                <span class="checkbox-visual">
+                  @if (rememberMe()) { <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> }
+                </span>
+                <span class="checkbox-label">Remember me</span>
+              </label>
+              <button type="button" class="link-text" (click)="forgotPasswordMode.set(true); errorMessage.set(''); successMessage.set('');">Forgot password?</button>
+            </div>
+            <p-button type="submit" [disabled]="!canSubmitPassword()" label="Sign In" [loading]="isLoading()" [pt]="buttonPt" />
+          </form>
+
+          <div class="divider">
+            <span class="divider-line"></span>
+            <span class="divider-text">or continue with</span>
+            <span class="divider-line"></span>
+          </div>
+
+          <button type="button" class="google-btn" (click)="onGoogleSignIn()">
+            <svg class="google-icon" viewBox="0 0 24 24">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            </svg>
+            <span>Continue with Google</span>
+          </button>
+        }
+
+        @case ('email_otp') {
+          @if (!emailOtpSent()) {
+            <div class="login-form">
+              <div class="form-group">
+                <div class="input-wrapper">
+                  <input pInputText type="email" [value]="emailOtpEmail()" (input)="updateEmailOtpEmail($event)"
+                    placeholder=" " class="form-input" id="emailOtp" autocomplete="email" />
+                  <label for="emailOtp" class="form-label">Email Address</label>
+                  <div class="input-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                  </div>
+                </div>
+              </div>
+              <p-button type="button" [disabled]="!isValidEmail(emailOtpEmail()) || isLoading()"
+                label="Send login code" [loading]="isLoading()" [pt]="buttonPt" (onClick)="onSendEmailOtp()" />
+              <p class="tab-hint">We will send a one-time code to your email.</p>
+            </div>
+          } @else {
+            <div class="login-form">
+              <p class="otp-hint">Enter the 6-digit code sent to <strong>{{ emailOtpEmail() }}</strong></p>
+              <div class="otp-inputs">
+                @for (digit of emailOtpDigits(); track $index) {
+                  <input #otpInput type="text" inputmode="numeric" maxlength="1" [value]="digit"
+                    (input)="updateEmailOtpDigit($index, $event)" (keydown)="handleEmailOtpKeydown($index, $event)"
+                    (paste)="handleEmailOtpPaste($event)" class="otp-digit" [class.filled]="digit" />
+                }
+              </div>
+              <p-button type="button" [disabled]="!canVerifyEmailOtp()" label="Verify & Sign In"
+                [loading]="isLoading()" [pt]="buttonPt" (onClick)="onVerifyEmailOtp()" />
+              <button type="button" class="back-link" (click)="emailOtpSent.set(false); emailOtpDigits.set(['','','','','','']);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                Use a different email
+              </button>
+            </div>
+          }
+        }
+
+        @case ('totp') {
+          <div class="login-form">
+            <div class="form-group">
+              <div class="input-wrapper">
+                <input pInputText type="email" [value]="totpEmail()" (input)="updateTotpEmail($event)"
+                  placeholder=" " class="form-input" id="totpEmail" autocomplete="email" />
+                <label for="totpEmail" class="form-label">Email Address</label>
+                <div class="input-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                </div>
+              </div>
+            </div>
+            <p class="otp-hint">Enter the 6-digit code from your authenticator app</p>
+            <div class="otp-inputs">
+              @for (digit of totpDigits(); track $index) {
+                <input #totpInput type="text" inputmode="numeric" maxlength="1" [value]="digit"
+                  (input)="updateTotpDigit($index, $event)" (keydown)="handleTotpKeydown($index, $event)"
+                  (paste)="handleTotpPaste($event)" class="otp-digit" [class.filled]="digit" />
+              }
+            </div>
+            <p-button type="button" [disabled]="!canVerifyTotp()" label="Verify & Sign In"
+              [loading]="isLoading()" [pt]="buttonPt" (onClick)="onVerifyTotp()" />
+          </div>
+        }
+      }
+
+    } @else {
+        @if (resetSuccess()) {
+          <div class="login-form">
+            <div class="success-state" style="padding: var(--space-4) 0;">
+              <div class="success-checkmark" style="width: var(--space-16); height: var(--space-16);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              </div>
+              <p class="success-text">{{ successMessage() }}</p>
+            </div>
+            <p-button type="button" label="Sign In" [pt]="buttonPt"
+              (onClick)="forgotPasswordMode.set(false); resetSuccess.set(false); forgotCodeSent.set(false); resetCode.set(''); newPassword.set(''); confirmPassword.set(''); successMessage.set('');" />
+          </div>
+        } @else {
+          @if (!forgotCodeSent()) {
+            <form (submit)="onForgotPasswordSubmit(); $event.preventDefault()" class="login-form">
+              <p class="otp-hint">Enter your email and we will send you a reset code.</p>
+              <div class="form-group">
+                <div class="input-wrapper">
+                  <input pInputText type="email" [value]="forgotEmail()" (input)="updateForgotEmail($event)"
+                    placeholder=" " class="form-input" id="forgotEmail" autocomplete="email" />
+                  <label for="forgotEmail" class="form-label">Email Address</label>
+                  <div class="input-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                  </div>
+                </div>
+              </div>
+              <p-button type="submit" [disabled]="!isValidEmail(forgotEmail()) || isLoading()"
+                label="Send Reset Code" [loading]="isLoading()" [pt]="buttonPt" />
+              <button type="button" class="back-link" (click)="forgotPasswordMode.set(false); errorMessage.set(''); successMessage.set('');">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                Back to sign in
+              </button>
+            </form>
+          } @else {
+            <form (submit)="onResetPasswordSubmit(); $event.preventDefault()" class="login-form">
+              <p class="otp-hint">Enter the reset code sent to <strong>{{ forgotEmail() }}</strong> and your new password.</p>
+
+              <div class="form-group">
+                <div class="input-wrapper">
+                  <input pInputText type="text" [value]="resetCode()" (input)="updateResetCode($event)"
+                    placeholder=" " class="form-input" id="resetCode" autocomplete="one-time-code" />
+                  <label for="resetCode" class="form-label">Reset Code</label>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <div class="input-wrapper">
+                  <input pInputText [type]="showNewPassword() ? 'text' : 'password'" [value]="newPassword()"
+                    (input)="updateNewPassword($event)" placeholder=" " class="form-input" id="newPassword" autocomplete="new-password" />
+                  <label for="newPassword" class="form-label">New Password</label>
+                  <button type="button" (click)="toggleShowNewPassword()" class="toggle-password" aria-label="Toggle new password">
+                    @if (showNewPassword()) {
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                    } @else {
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    }
+                  </button>
+                </div>
+                @if (newPassword() && newPassword().length < 6) {
+                  <span class="error-message">Password must be at least 6 characters</span>
+                }
+              </div>
+
+              <div class="form-group">
+                <div class="input-wrapper">
+                  <input pInputText [type]="showConfirmPassword() ? 'text' : 'password'" [value]="confirmPassword()"
+                    (input)="updateConfirmPassword($event)" placeholder=" " class="form-input" id="confirmPassword" autocomplete="new-password" />
+                  <label for="confirmPassword" class="form-label">Confirm Password</label>
+                  <button type="button" (click)="toggleShowConfirmPassword()" class="toggle-password" aria-label="Toggle confirm password">
+                    @if (showConfirmPassword()) {
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                    } @else {
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    }
+                  </button>
+                </div>
+                @if (confirmPassword() && confirmPassword() !== newPassword()) {
+                  <span class="error-message">Passwords do not match</span>
+                }
+              </div>
+
+              <p-button type="submit" [disabled]="!canSubmitReset()" label="Reset Password"
+                [loading]="isLoading()" [pt]="buttonPt" />
+
+              <button type="button" class="back-link" (click)="forgotCodeSent.set(false); resetCode.set(''); newPassword.set(''); confirmPassword.set(''); errorMessage.set(''); successMessage.set('');">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                Use a different email
+              </button>
+            </form>
+          }
+        }
+      }
+    </div>
+
+    <div class="login-footer">
+      <p class="footer-text">{{ companyName() }}</p>
+      @if (companyTaxId()) {
+        <p class="footer-sub">Tax ID: {{ companyTaxId() }}</p>
+      }
+    </div>
+  </div>
+</div>

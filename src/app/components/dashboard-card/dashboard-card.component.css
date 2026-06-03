@@ -1,0 +1,135 @@
+
+.dashboard-card {
+  background: color-mix(in srgb, var(--bg-surface) 60%, transparent);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-6);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboard-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--card-color), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px color-mix(in srgb, var(--bg-void) 30%, transparent);
+  border-color: var(--border-strong);
+}
+
+.dashboard-card:hover::before {
+  opacity: 1;
+}
+
+.dashboard-card.purple {
+  --card-color: var(--accent-primary);
+}
+
+.dashboard-card.blue {
+  --card-color: var(--blue-500);
+}
+
+.dashboard-card.green {
+  --card-color: var(--accent-success);
+}
+
+.dashboard-card.orange {
+  --card-color: var(--accent-warning);
+}
+
+.dashboard-card.pink {
+  --card-color: var(--accent-error);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+  gap: var(--space-4);
+}
+
+.card-icon {
+  width: var(--space-12);
+  height: var(--space-12);
+  border-radius: var(--radius-xl);
+  background: linear-gradient(135deg, var(--card-color), color-mix(in srgb, var(--accent-primary) 50%, transparent));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  opacity: 0.9;
+}
+
+.card-icon ::ng-deep svg {
+  width: var(--space-6);
+  height: var(--space-6);
+}
+
+.card-trend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--space-2);
+  background: color-mix(in srgb, var(--text-primary) 5%, transparent);
+}
+
+.card-trend.up {
+  color: var(--accent-success);
+  background: color-mix(in srgb, var(--accent-success) 10%, transparent);
+}
+
+.card-trend.down {
+  color: var(--accent-error);
+  background: color-mix(in srgb, var(--accent-error) 10%, transparent);
+}
+
+.trend-icon {
+  width: var(--space-4);
+  height: var(--space-4);
+}
+
+.card-content {
+  position: relative;
+  z-index: 1;
+}
+
+.card-title {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
+  margin: 0 0 var(--space-2) 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.card-value {
+  font-family: var(--font-sans);
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-1) 0;
+  line-height: 1;
+}
+
+.card-subtitle {
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin: 0;
+}

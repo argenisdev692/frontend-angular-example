@@ -1,0 +1,61 @@
+<p-drawer
+  [(visible)]="visible"
+  position="left"
+  styleClass="app-drawer"
+  [showCloseIcon]="true"
+  (onHide)="onDrawerHide()">
+
+  <ng-template #header>
+    <div class="logo">
+      <img src="/Logo%20PNG-WHITE.png" alt="Logo" class="logo-img" />
+      <span>{{ companyName() }}</span>
+    </div>
+  </ng-template>
+
+  <nav class="sidebar-nav">
+    <p-menu [model]="menuModel()" styleClass="drawer-menu">
+      <ng-template #item let-item>
+        <button
+          [class]="getMenuItemClasses(item.active)"
+          class="menu-item"
+          [attr.aria-label]="item.label">
+          <span class="menu-icon" [innerHTML]="item.icon"></span>
+          <span class="menu-label">{{ item.label }}</span>
+          @if (item.active) {
+            <span class="menu-indicator"></span>
+          }
+        </button>
+      </ng-template>
+    </p-menu>
+  </nav>
+
+  <ng-template #footer>
+    <div class="sidebar-footer">
+      <button class="user-profile" (click)="goToProfile()" type="button" aria-label="Go to profile">
+        @if (user()?.profilePhotoUrl) {
+          <img [src]="user()?.profilePhotoUrl" alt="Profile" class="user-avatar-photo" />
+        } @else {
+          <div class="user-avatar">
+            <span>{{ userInitials }}</span>
+          </div>
+        }
+        <div class="user-info">
+          <p class="user-name">{{ user()?.name }} {{ user()?.lastName }}</p>
+          <p class="user-role">{{ primaryRole }}</p>
+        </div>
+      </button>
+
+      <!-- Theme toggle -->
+      <div class="theme-toggle">
+        <div class="theme-toggle-label">
+          <i class="pi" [class.pi-sun]="!isDark()" [class.pi-moon]="isDark()"></i>
+          <span>{{ isDark() ? 'Dark' : 'Light' }} mode</span>
+        </div>
+        <p-toggleswitch
+          [ngModel]="isDark()"
+          (ngModelChange)="onThemeToggle($event)"
+          ariaLabel="Toggle dark/light theme" />
+      </div>
+    </div>
+  </ng-template>
+</p-drawer>

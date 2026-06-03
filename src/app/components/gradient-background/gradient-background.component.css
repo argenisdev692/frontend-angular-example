@@ -1,0 +1,97 @@
+/* ═══════════════════════════════════════════════
+   NOISE GRAIN OVERLAY — Purple Midnight
+   Stack: mesh base → glow orbs → grain → estrellas
+   Adaptado a Angular component · Mayo 2026
+   ═══════════════════════════════════════════════ */
+
+/* ── Layer 1: Base + Mesh radial-gradients ── */
+.gradient-background {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background-color: var(--bg-void);
+  background-image:
+    radial-gradient(ellipse at 15% 20%, color-mix(in srgb, var(--bg-surface) 18%, transparent) 0px, transparent 55%),
+    radial-gradient(ellipse at 80% 10%, color-mix(in srgb, var(--purple-500) 12%, transparent) 0px, transparent 50%),
+    radial-gradient(ellipse at 5% 65%, color-mix(in srgb, var(--accent-primary) 20%, transparent) 0px, transparent 60%),
+    radial-gradient(ellipse at 70% 70%, color-mix(in srgb, var(--purple-600) 10%, transparent) 0px, transparent 55%),
+    radial-gradient(ellipse at 40% 40%, color-mix(in srgb, var(--accent-secondary) 8%, transparent) 0px, transparent 45%),
+    radial-gradient(ellipse at 90% 80%, color-mix(in srgb, var(--accent-primary) 12%, transparent) 0px, transparent 40%),
+    radial-gradient(ellipse at 20% 85%, color-mix(in srgb, var(--bg-surface) 15%, transparent) 0px, transparent 55%);
+  background-size: 400% 400%;
+  animation: mesh-drift 20s ease infinite;
+  will-change: background-position;
+}
+
+@keyframes mesh-drift {
+  0%   { background-position: 0% 50%; }
+  33%  { background-position: 100% 30%; }
+  66%  { background-position: 50% 80%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ── Layer 2: Glow orbs animados ── */
+.glow-orbs {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 25% 35%, color-mix(in srgb, var(--accent-primary) 10%, transparent) 0px, transparent 38%),
+    radial-gradient(circle at 75% 25%, color-mix(in srgb, var(--purple-600) 8%, transparent) 0px, transparent 32%),
+    radial-gradient(circle at 15% 75%, color-mix(in srgb, var(--purple-500) 12%, transparent) 0px, transparent 35%),
+    radial-gradient(circle at 80% 70%, color-mix(in srgb, var(--bg-surface) 8%, transparent) 0px, transparent 30%);
+  animation: orbs-float 22s ease-in-out infinite alternate;
+  filter: blur(80px);
+  will-change: transform;
+}
+
+@keyframes orbs-float {
+  0%   { transform: translate(0px, 0px) scale(1); }
+  25%  { transform: translate(20px, -15px) scale(1.05); }
+  50%  { transform: translate(-10px, 25px) scale(0.97); }
+  75%  { transform: translate(15px, 10px) scale(1.03); }
+  100% { transform: translate(-5px, -20px) scale(1.01); }
+}
+
+/* ── Layer 3: Noise grain cinematográfico ── */
+.grain-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+
+  /* SVG feTurbulence inlinado — sin archivos externos */
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)' opacity='1'/%3E%3C/svg%3E");
+  background-size: 180px 180px;  /* tile size — más pequeño = grano más fino */
+
+  opacity: 0.045;                /* 0.03 = sutil · 0.06 = visible · nunca > 0.08 */
+  mix-blend-mode: overlay;       /* overlay = efecto cinematográfico */
+}
+
+/* ── Layer 4: Estrellas dinámicas generadas por Angular ── */
+.stars {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.star {
+  position: absolute;
+  background: var(--text-primary);
+  border-radius: 50%;
+  opacity: var(--op);
+  animation: twinkle var(--d) infinite;
+  animation-delay: var(--delay);
+}
+
+@keyframes twinkle {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  50% {
+    opacity: var(--op);
+    transform: scale(1);
+  }
+}

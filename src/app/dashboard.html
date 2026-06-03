@@ -1,0 +1,114 @@
+<div class="dashboard-container">
+  <app-sidebar [visible]="drawerVisible()" (visibleChange)="drawerVisible.set($event)" [companyName]="companyName()"></app-sidebar>
+
+  <main class="main-content">
+    <header class="header">
+      <div class="header-content">
+        <div class="header-title-row">
+          <p-button
+            type="button"
+            icon="pi pi-bars"
+            [text]="true"
+            [rounded]="true"
+            severity="secondary"
+            ariaLabel="Open menu"
+            styleClass="menu-toggle"
+            (onClick)="drawerVisible.set(true)" />
+          <div class="header-title-group">
+            <div class="header-logo-title">
+              <img src="/Logo%20PNG-WHITE.png" alt="Logo" class="header-logo" />
+              <h1 class="header-title">{{ companyName() }} Dashboard</h1>
+            </div>
+            @if (companyTaxId()) {
+              <p class="header-meta">Tax ID: {{ companyTaxId() }}</p>
+            }
+          </div>
+        </div>
+        @if (loading()) {
+          <p class="header-subtitle">Loading...</p>
+        } @else if (error()) {
+          <p class="header-subtitle">Error loading user data</p>
+        } @else if (user()) {
+          <p class="header-subtitle">Welcome back, {{ user()?.name }} {{ user()?.lastName }}</p>
+        }
+      </div>
+      <div class="header-actions">
+        <app-animated-button
+          text="New Claim"
+          variant="primary"
+        ></app-animated-button>
+        <app-user-menu />
+      </div>
+    </header>
+
+    @defer {
+      <section class="stats-grid">
+        <app-dashboard-card
+          title="Total Revenue"
+          value="$124,500"
+          subtitle="+12.5% from last month"
+          trend="up"
+          trendValue="+12.5%"
+          color="purple"
+        ></app-dashboard-card>
+
+        <app-dashboard-card
+          title="Active Users"
+          value="8,432"
+          subtitle="+5.2% from last month"
+          trend="up"
+          trendValue="+5.2%"
+          color="blue"
+        ></app-dashboard-card>
+
+        <app-dashboard-card
+          title="Projects"
+          value="24"
+          subtitle="3 in progress"
+          trend="neutral"
+          color="green"
+        ></app-dashboard-card>
+
+        <app-dashboard-card
+          title="Conversion Rate"
+          value="3.2%"
+          subtitle="-0.8% from last month"
+          trend="down"
+          trendValue="-0.8%"
+          color="orange"
+        ></app-dashboard-card>
+      </section>
+    }
+
+    @defer {
+      <section class="content-section">
+        <div class="content-card">
+          <h2 class="section-title">Recent Activity</h2>
+          <div class="activity-list">
+            <div class="activity-item">
+              <div class="activity-icon completed"></div>
+              <div class="activity-details">
+                <p class="activity-title">Project Alpha completed</p>
+                <p class="activity-time">2 hours ago</p>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon pending"></div>
+              <div class="activity-details">
+                <p class="activity-title">New user registration</p>
+                <p class="activity-time">4 hours ago</p>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon in-progress"></div>
+              <div class="activity-details">
+                <p class="activity-title">Dashboard update in progress</p>
+                <p class="activity-time">6 hours ago</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    }
+  </main>
+</div>

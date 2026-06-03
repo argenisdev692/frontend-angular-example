@@ -1,0 +1,81 @@
+<p-dialog
+  [visible]="visible()"
+  (visibleChange)="visibleChange.emit($event)"
+  [modal]="true"
+  [closable]="false"
+  [draggable]="false"
+  [resizable]="false"
+  header="Crop Profile Photo"
+  styleClass="cropper-dialog"
+  appendTo="body">
+
+  <div class="cropper-wrapper">
+    @if (loading()) {
+      <div class="cropper-loading">
+        <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+        <p>Loading image...</p>
+      </div>
+    }
+    <div class="cropper-canvas" [class.hidden]="loading()">
+      <img
+        #imageElement
+        [src]="imageUrl()"
+        alt="Crop preview"
+        class="cropper-source-img" />
+    </div>
+  </div>
+
+  <div class="cropper-toolbar">
+    <p-button
+      icon="pi pi-undo"
+      [rounded]="true"
+      [text]="true"
+      severity="secondary"
+      title="Rotate left"
+      (onClick)="rotate(-90)" />
+    <p-button
+      icon="pi pi-refresh"
+      [rounded]="true"
+      [text]="true"
+      severity="secondary"
+      title="Reset"
+      (onClick)="reset()" />
+    <p-button
+      icon="pi pi-redo"
+      [rounded]="true"
+      [text]="true"
+      severity="secondary"
+      title="Rotate right"
+      (onClick)="rotate(90)" />
+    <p-button
+      icon="pi pi-minus"
+      [rounded]="true"
+      [text]="true"
+      severity="secondary"
+      title="Zoom out"
+      (onClick)="zoom(-0.1)" />
+    <p-button
+      icon="pi pi-plus"
+      [rounded]="true"
+      [text]="true"
+      severity="secondary"
+      title="Zoom in"
+      (onClick)="zoom(0.1)" />
+  </div>
+
+  <ng-template #footer>
+    <div class="cropper-footer">
+      <p-button
+        label="Cancel"
+        icon="pi pi-times"
+        severity="secondary"
+        [text]="true"
+        (onClick)="onCancel()" />
+      <p-button
+        label="Apply"
+        icon="pi pi-check"
+        styleClass="btn-primary-modern"
+        (onClick)="onApply()" />
+    </div>
+  </ng-template>
+</p-dialog>

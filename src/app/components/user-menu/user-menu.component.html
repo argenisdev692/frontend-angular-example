@@ -1,0 +1,30 @@
+<div class="user-menu-wrapper">
+  <button
+    type="button"
+    class="user-menu-trigger"
+    (click)="menu.toggle($event)"
+    aria-label="User menu">
+    @if (user()?.profilePhotoUrl) {
+      <img
+        [src]="user()?.profilePhotoUrl"
+        alt="Profile"
+        class="user-menu-photo" />
+    } @else {
+      <div class="user-menu-avatar">
+        <span>{{ userInitials() }}</span>
+      </div>
+    }
+    <div class="user-menu-info">
+      <span class="user-menu-name">{{ user()?.name }} {{ user()?.lastName }}</span>
+      <span class="user-menu-role">{{ primaryRole() }}</span>
+    </div>
+    <i class="pi pi-chevron-down user-menu-chevron"></i>
+  </button>
+
+  <p-menu
+    #menu
+    [model]="menuItems"
+    [popup]="true"
+    styleClass="user-dropdown-menu"
+    appendTo="body" />
+</div>
