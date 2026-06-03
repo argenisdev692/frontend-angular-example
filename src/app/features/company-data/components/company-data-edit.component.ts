@@ -6,6 +6,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
+import { SignaturePadComponent, NgSignaturePadOptions } from '@almothafar/angular-signature-pad';
 import { SidebarComponent } from '../../../components/sidebar/sidebar.component';
 import { PageHeaderComponent } from '../../../components/page-header/page-header.component';
 import { FormSubmitButtonComponent } from '../../../components/form-submit-button/form-submit-button.component';
@@ -26,7 +27,8 @@ import { CompanyDataResponse } from '../../../api/models/company-data-response';
     SidebarComponent,
     PageHeaderComponent,
     FormSubmitButtonComponent,
-    FloatingMenuButtonComponent
+    FloatingMenuButtonComponent,
+    SignaturePadComponent
   ],
   providers: [MessageService],
   template: `
@@ -239,6 +241,56 @@ import { CompanyDataResponse } from '../../../api/models/company-data-response';
               </div>
             }
           </div>
+
+          <div class="company-card signature-card">
+            <div class="company-card-header">
+              <h2 class="card-title">Digital Signature</h2>
+              @if (!isEditing() && companyData()?.signaturePath) {
+                <button class="btn-edit-company" (click)="toggleEdit()">
+                  <i class="pi pi-pencil"></i> Edit
+                </button>
+              }
+            </div>
+
+            @if (isEditing()) {
+              <div class="signature-edit">
+                <signature-pad
+                  #signaturePad
+                  [options]="signatureOptions()"
+                  class="signature-canvas"
+                />
+                <div class="signature-actions">
+                  <button class="btn-secondary-modern" (click)="clearSignature()">
+                    <i class="pi pi-eraser"></i> Clear
+                  </button>
+                  <app-form-submit-button
+                    label="Save Signature"
+                    icon="pi-check"
+                    [loading]="savingSignature()"
+                    (clicked)="saveSignature()" />
+                </div>
+              </div>
+            } @else {
+              <div class="signature-preview">
+                @if (companyData()?.signaturePath) {
+                  <img [src]="companyData()?.signaturePath" alt="Company signature" class="signature-image" />
+                  <div class="signature-actions-readonly">
+                    <button class="btn-action btn-action-delete" (click)="deleteSignature()" title="Delete signature">
+                      <i class="pi pi-trash"></i>
+                    </button>
+                  </div>
+                } @else {
+                  <div class="signature-empty">
+                    <i class="pi pi-pencil" style="font-size: 2rem; color: var(--text-muted)"></i>
+                    <p>No signature uploaded yet.</p>
+                    <button class="btn-edit-company" (click)="toggleEdit()">
+                      <i class="pi pi-pencil"></i> Add Signature
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
         </div>
       }
     </div>
@@ -434,6 +486,113 @@ import { CompanyDataResponse } from '../../../api/models/company-data-response';
       margin: var(--space-2) 0;
     }
 
+    .signature-edit {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+
+    .signature-canvas {
+      display: block;
+      width: 100%;
+      max-width: 500px;
+      height: 200px;
+      border: 1px dashed var(--border-default);
+      border-radius: var(--radius-md);
+      background: var(--bg-subtle);
+      margin: 0 auto;
+    }
+
+    .signature-canvas canvas {
+      width: 100%;
+      height: 100%;
+      border-radius: var(--radius-md);
+    }
+
+    .signature-actions {
+      display: flex;
+      justify-content: center;
+      gap: var(--space-3);
+    }
+
+    .signature-preview {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-4);
+      padding: var(--space-4) 0;
+    }
+
+    .signature-image {
+      max-width: 100%;
+      height: auto;
+      max-height: 200px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-subtle);
+    }
+
+    .signature-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-8) 0;
+      color: var(--text-muted);
+      font-size: var(--text-sm);
+    }
+
+    .signature-actions-readonly {
+      display: flex;
+      gap: var(--space-2);
+    }
+
+    .btn-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-default);
+      background: color-mix(in srgb, var(--bg-elevated) 60%, transparent);
+      color: var(--text-secondary);
+      transition: all var(--transition);
+      cursor: pointer;
+    }
+
+    .btn-action:hover {
+      background: var(--bg-hover);
+      border-color: var(--border-strong);
+      color: var(--text-primary);
+      transform: scale(1.1);
+    }
+
+    .btn-action-delete { color: var(--accent-error); }
+    .btn-action-delete:hover { border-color: var(--accent-error); }
+
+    .btn-secondary-modern {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2);
+      padding: var(--space-3) var(--space-5);
+      background: transparent;
+      color: var(--text-primary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      font-weight: var(--font-medium);
+      font-size: var(--text-sm);
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .btn-secondary-modern:hover {
+      background: var(--bg-hover);
+      border-color: var(--border-strong);
+      transform: translateY(-1px);
+    }
+
     @media (max-width: 640px) {
       .form-row {
         grid-template-columns: 1fr;
@@ -462,6 +621,17 @@ export class CompanyDataEditComponent implements OnInit, OnDestroy {
   readonly mapsError = signal<string | null>(null);
 
   readonly addressInputRef = viewChild.required<ElementRef<HTMLInputElement>>('addressInput');
+  readonly signaturePadRef = viewChild<SignaturePadComponent>('signaturePad');
+
+  readonly savingSignature = signal(false);
+  readonly signatureOptions = signal<NgSignaturePadOptions>({
+    minWidth: 2,
+    maxWidth: 3,
+    penColor: '#00B5E2',
+    backgroundColor: 'rgba(0,0,0,0)',
+    canvasWidth: 500,
+    canvasHeight: 200,
+  });
 
   editForm: UpdateCompanyDataDto = {};
   private autocomplete: google.maps.places.Autocomplete | null = null;
@@ -588,6 +758,52 @@ export class CompanyDataEditComponent implements OnInit, OnDestroy {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to update company data' });
     } finally {
       this.saving.set(false);
+    }
+  }
+
+  clearSignature(): void {
+    this.signaturePadRef()?.clear();
+  }
+
+  async saveSignature(): Promise<void> {
+    const pad = this.signaturePadRef();
+    const data = this.companyData();
+    if (!pad || !data?.id) return;
+
+    if (pad.isEmpty()) {
+      this.messageService.add({ severity: 'warn', summary: 'Validation', detail: 'Please draw a signature before saving' });
+      return;
+    }
+
+    this.savingSignature.set(true);
+    try {
+      const base64 = pad.toDataURL('image/png');
+      const blob = await (await fetch(base64)).blob();
+      const file = new File([blob], 'signature.png', { type: 'image/png' });
+      const updated = await this.featureService.uploadSignature(data.id, file);
+      this.companyData.set(updated);
+      this.isEditing.set(false);
+      this.messageService.add({ severity: 'success', summary: 'Saved', detail: 'Signature saved successfully' });
+    } catch {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to save signature' });
+    } finally {
+      this.savingSignature.set(false);
+    }
+  }
+
+  async deleteSignature(): Promise<void> {
+    const data = this.companyData();
+    if (!data?.id || !data.signaturePath) return;
+
+    this.savingSignature.set(true);
+    try {
+      const updated = await this.featureService.deleteSignature(data.id);
+      this.companyData.set(updated);
+      this.messageService.add({ severity: 'success', summary: 'Deleted', detail: 'Signature deleted successfully' });
+    } catch {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete signature' });
+    } finally {
+      this.savingSignature.set(false);
     }
   }
 }

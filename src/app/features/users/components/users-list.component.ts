@@ -156,6 +156,10 @@ export class UsersListComponent {
     this.router.navigate(['/users', user.id, 'edit']);
   }
 
+  onManagePermissions(id: string): void {
+    this.router.navigate(['/users', id, 'permissions']);
+  }
+
   onDelete(id: string): void {
     if (!confirm('Are you sure you want to delete this user?')) return;
     this.service.delete(id).then(() => {

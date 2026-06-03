@@ -39,4 +39,22 @@ export class CompanyDataFeatureService {
       this.http.patch<CompanyDataResponse>(url, body)
     );
   }
+
+  async uploadSignature(id: string, file: File): Promise<CompanyDataResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const rootUrl = (this.config.rootUrl || '').replace(/\/$/, '');
+    const url = `${rootUrl}/api/v1/company-data/${encodeURIComponent(id)}/signature`;
+    return firstValueFrom(
+      this.http.post<CompanyDataResponse>(url, formData)
+    );
+  }
+
+  async deleteSignature(id: string): Promise<CompanyDataResponse> {
+    const rootUrl = (this.config.rootUrl || '').replace(/\/$/, '');
+    const url = `${rootUrl}/api/v1/company-data/${encodeURIComponent(id)}/signature`;
+    return firstValueFrom(
+      this.http.delete<CompanyDataResponse>(url)
+    );
+  }
 }
