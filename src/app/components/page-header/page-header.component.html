@@ -1,4 +1,24 @@
 <header class="page-header">
+  <!-- Mobile Top Row: Menu | Logo | UserMenu -->
+  <div class="header-mobile-top">
+    <p-button
+      type="button"
+      icon="pi pi-bars"
+      [text]="true"
+      [rounded]="true"
+      severity="secondary"
+      ariaLabel="Open menu"
+      styleClass="menu-toggle"
+      (onClick)="onMenuClick()" />
+
+    <div class="header-logo-center">
+      <img src="/Logo%20PNG-WHITE.png" alt="Logo" class="header-logo-mobile" />
+    </div>
+
+    <app-user-menu class="header-user-mobile" />
+  </div>
+
+  <!-- Desktop Title (hidden on mobile) -->
   <div class="header-content">
     <div class="header-title-row">
       <p-button
@@ -29,6 +49,32 @@
   </div>
 
   <div class="header-actions">
+    <!-- Expandable Search -->
+    <div class="search-wrapper" [class.open]="searchOpen()">
+      @if (!searchOpen()) {
+        <button type="button" class="search-toggle notif-btn" (click)="openSearch()" aria-label="Search">
+          <i class="pi pi-search notif-icon"></i>
+        </button>
+      }
+      @if (searchOpen()) {
+        <div class="search-input-wrap" (click)="$event.stopPropagation()">
+          <i class="pi pi-search search-input-icon"></i>
+          <input
+            #searchInput
+            type="text"
+            class="search-input"
+            placeholder="Search claims, contacts..."
+            [value]="searchQuery()"
+            (input)="onSearchInput($event)"
+            (keydown)="onSearchKeydown($event)"
+            aria-label="Search input" />
+          <button type="button" class="search-close" (click)="closeSearch()" aria-label="Close search">
+            <i class="pi pi-times"></i>
+          </button>
+        </div>
+      }
+    </div>
+
     <div class="header-notifications">
       <!-- Notifications -->
       <div class="notif-wrapper">
@@ -126,10 +172,11 @@
 
     @if (showNewClaim()) {
       <app-animated-button
+        class="header-new-claim-btn"
         text="New Claim"
         variant="primary"
         icon="pi-plus" />
     }
-    <app-user-menu />
+    <app-user-menu class="header-user-desktop" />
   </div>
 </header>

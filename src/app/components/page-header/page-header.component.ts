@@ -1,4 +1,4 @@
-import { Component, input, output, signal, OnInit } from '@angular/core';
+import { Component, input, output, signal, OnInit, viewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { UserMenuComponent } from '../user-menu/user-menu.component';
@@ -28,6 +28,10 @@ export class PageHeaderComponent implements OnInit {
   notificationsOpen = signal(false);
   messagesOpen = signal(false);
   inboxOpen = signal(false);
+  searchOpen = signal(false);
+  searchQuery = signal('');
+
+  readonly searchInputRef = viewChild.required<ElementRef<HTMLInputElement>>('searchInput');
 
   notifications = signal<NotificationItem[]>([
     { title: 'New claim assigned', message: 'Claim #2342 has been assigned to you', time: '2 min ago', unread: true },
@@ -63,6 +67,23 @@ export class PageHeaderComponent implements OnInit {
     this.inboxOpen.set(false);
   }
 
+  openSearch(): void {
+    this.closeDropdowns();
+    this.searchOpen.set(true);
+    // Focus input on next tick
+    requestAnimationFrame(() => this.searchInputRef().nativeElement.focus());
+  }
+
+  closeSearch(): void {
+    this.searchOpen.set(false);
+    this.searchQuery.set('');
+  }
+
+  onSearchInput(event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    this.searchQuery.set(value);
+  }
+
   ngOnInit(): void {
     if (typeof document !== 'undefined') {
       document.addEventListener('click', () => this.closeDropdowns());
@@ -71,5 +92,11 @@ export class PageHeaderComponent implements OnInit {
 
   onMenuClick(): void {
     this.menuToggle.emit();
+  }
+
+  onSearchKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      this.closeSearch();
+    }
   }
 }
