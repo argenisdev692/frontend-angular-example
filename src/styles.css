@@ -367,3 +367,14 @@ html {
   transition: left 0.12s ease-out, top 0.12s ease-out;
   filter: blur(2px);
 }
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE BASE FONT SIZE
+   Scales all rem tokens proportionally on mobile
+   ═══════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  html {
+    font-size: 15px;
+  }
+}
