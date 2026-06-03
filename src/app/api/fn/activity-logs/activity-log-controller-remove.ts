@@ -8,12 +8,14 @@ import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
 
-export interface AuthControllerMe$Params {
+export interface ActivityLogControllerRemove$Params {
+  id: string;
 }
 
-export function authControllerMe(http: HttpClient, rootUrl: string, params?: AuthControllerMe$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
-  const rb = new RequestBuilder(rootUrl, authControllerMe.PATH, 'get');
+export function activityLogControllerRemove(http: HttpClient, rootUrl: string, params: ActivityLogControllerRemove$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+  const rb = new RequestBuilder(rootUrl, activityLogControllerRemove.PATH, 'delete');
   if (params) {
+    rb.path('id', params.id, {});
   }
 
   return http.request(
@@ -26,4 +28,4 @@ export function authControllerMe(http: HttpClient, rootUrl: string, params?: Aut
   );
 }
 
-authControllerMe.PATH = '/api/v1/auth/me';
+activityLogControllerRemove.PATH = '/api/v1/activity-logs/{id}';

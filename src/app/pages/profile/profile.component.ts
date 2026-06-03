@@ -8,6 +8,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { ToastModule } from 'primeng/toast';
+import { DialogModule } from 'primeng/dialog';
 import { MessageService } from 'primeng/api';
 import { AuthFeatureService } from '../../features/auth/services/auth.service';
 import { AuthService as GeneratedAuthService } from '../../api/services/auth.service';
@@ -33,7 +34,8 @@ import { FloatingMenuButtonComponent } from '../../components/floating-menu-butt
     PageHeaderComponent,
     FormSubmitButtonComponent,
     ImageCropperDialogComponent,
-    FloatingMenuButtonComponent
+    FloatingMenuButtonComponent,
+    DialogModule
   ],
   providers: [MessageService],
   templateUrl: './profile.component.html',
@@ -56,6 +58,16 @@ export class ProfileComponent implements OnInit {
   protected readonly savingPassword = signal(false);
   protected readonly cropperVisible = signal(false);
   protected readonly cropperImageUrl = signal<string | null>(null);
+
+  protected readonly totpSetupVisible = signal(false);
+  protected readonly totpSetupLoading = signal(false);
+  protected readonly totpSetupData = signal<{ qrCodeUrl: string; secret: string; manualEntryKey?: string } | null>(null);
+  protected readonly totpCode = signal('');
+  protected readonly savingTotp = signal(false);
+
+  protected readonly backupCodesVisible = signal(false);
+  protected readonly backupCodes = signal<string[]>([]);
+  protected readonly confirmingDisable = signal(false);
 
   protected editForm: Partial<UpdateProfileDto> = {};
   protected passwordForm = { currentPassword: '', newPassword: '', confirmPassword: '' };
@@ -88,7 +100,7 @@ export class ProfileComponent implements OnInit {
     if (!u) return '?';
     const first = u.name?.charAt(0) ?? '';
     const last = u.lastName?.charAt(0) ?? '';
-    return (first + last).toUpperCase() || u.username.charAt(0).toUpperCase();
+    return (first + last).toUpperCase() || (u.username?.charAt(0) ?? '').toUpperCase();
   });
 
   toggleEdit(): void {
@@ -204,18 +216,89 @@ export class ProfileComponent implements OnInit {
   }
 
   async enableTotp(): Promise<void> {
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Coming Soon',
-      detail: 'TOTP setup endpoint is not available in the generated API. Regenerate API without --excludeTags auth:2fa'
-    });
+    this.totpSetupLoading.set(true);
+    this.totpSetupVisible.set(true);
+    this.totpCode.set('');
+    this.totpSetupData.set(null);
+
+    try {
+      const rootUrl = (this.config.rootUrl || '').replace(/\/$/, '');
+      const data = await firstValueFrom(
+        this.http.post<{
+          qrCodeUrl: string;
+          secret: string;
+          manualEntryKey?: string;
+        }>(`${rootUrl}/api/v1/auth/two-factor/setup`, {})
+      );
+      this.totpSetupData.set(data);
+    } catch {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to start 2FA setup' });
+      this.totpSetupVisible.set(false);
+    } finally {
+      this.totpSetupLoading.set(false);
+    }
+  }
+
+  async confirmTotpSetup(): Promise<void> {
+    const code = this.totpCode().trim();
+    if (!code || code.length < 6) {
+      this.messageService.add({ severity: 'warn', summary: 'Warning', detail: 'Enter a valid 6-digit TOTP code' });
+      return;
+    }
+
+    this.savingTotp.set(true);
+    try {
+      await this.http.post(`${(this.config.rootUrl || '').replace(/\/$/, '')}/api/v1/auth/two-factor/enable`, { code }).toPromise();
+      this.totpSetupVisible.set(false);
+      this.totpCode.set('');
+      this.totpSetupData.set(null);
+      await this.authFeatureService.fetchCurrentUser();
+      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Two-factor authentication enabled successfully' });
+    } catch {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Invalid TOTP code. Please try again.' });
+    } finally {
+      this.savingTotp.set(false);
+    }
   }
 
   async disableTotp(): Promise<void> {
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Coming Soon',
-      detail: 'TOTP disable endpoint is not available in the generated API. Regenerate API without --excludeTags auth:2fa'
-    });
+    if (!this.confirmingDisable()) {
+      this.confirmingDisable.set(true);
+      this.messageService.add({ severity: 'warn', summary: 'Confirm', detail: 'Click Disable 2FA again to confirm' });
+      return;
+    }
+
+    this.savingTotp.set(true);
+    try {
+      await this.http.post(`${(this.config.rootUrl || '').replace(/\/$/, '')}/api/v1/auth/two-factor/disable`, {}).toPromise();
+      this.confirmingDisable.set(false);
+      await this.authFeatureService.fetchCurrentUser();
+      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Two-factor authentication disabled' });
+    } catch {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to disable 2FA' });
+    } finally {
+      this.savingTotp.set(false);
+    }
+  }
+
+  async regenerateBackupCodes(): Promise<void> {
+    try {
+      const rootUrl = (this.config.rootUrl || '').replace(/\/$/, '');
+      const data = await firstValueFrom(
+        this.http.post<{ backupCodes: string[] }>(`${rootUrl}/api/v1/auth/two-factor/backup-codes/regenerate`, {})
+      );
+      this.backupCodes.set(data.backupCodes);
+      this.backupCodesVisible.set(true);
+      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Backup codes regenerated' });
+    } catch {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to regenerate backup codes' });
+    }
+  }
+
+  closeTotpSetup(): void {
+    this.totpSetupVisible.set(false);
+    this.totpCode.set('');
+    this.totpSetupData.set(null);
+    this.confirmingDisable.set(false);
   }
 }

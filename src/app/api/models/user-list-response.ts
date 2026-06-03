@@ -6,6 +6,7 @@ export interface UserListResponse {
 'id': string;
 'name': string;
 'lastName': string | null;
+'username': string | null;
 'email': string;
 'phone': string | null;
 'emailVerifiedAt': string | null;
@@ -22,6 +23,17 @@ export interface UserListResponse {
 'action': string;
 'subject': string;
 }>;
+'dateOfBirth': string | null;
+'address': string | null;
+'address2': string | null;
+'zipCode': string | null;
+'city': string | null;
+'state': string | null;
+'country': string | null;
+'gender': string | null;
+'profilePhotoUrl': string | null;
+'totpEnabled': boolean;
+'mustChangePassword': boolean;
 }>;
   limit: number;
   page: number;

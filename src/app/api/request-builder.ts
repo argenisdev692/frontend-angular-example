@@ -363,8 +363,7 @@ export class RequestBuilder {
       headers: httpHeaders,
       responseType: options.responseType,
       reportProgress: options.reportProgress,
-      context: options.context,
-      withCredentials: true
+      context: options.context
     });
   }
 }

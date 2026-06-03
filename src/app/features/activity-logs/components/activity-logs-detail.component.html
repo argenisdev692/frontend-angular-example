@@ -1,0 +1,92 @@
+<app-sidebar [visible]="drawerVisible()" (visibleChange)="drawerVisible.set($event)"></app-sidebar>
+
+<div class="activity-logs-page">
+  <app-page-header
+    title="Activity Log Detail"
+    subtitle="View detailed audit log information"
+    (menuToggle)="drawerVisible.set(true)" />
+
+  <div class="detail-header">
+    <button class="btn btn--ghost" type="button" (click)="onBack()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      <span>Back to Activity Logs</span>
+    </button>
+    <div class="detail-actions">
+      <button class="btn btn--danger" type="button" (click)="onDelete()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        <span>Delete</span>
+      </button>
+    </div>
+  </div>
+
+  @if (log(); as l) {
+    <div class="card-modern detail-card">
+      <div class="detail-hero">
+        <div class="log-avatar">
+          <span>{{ l.action.charAt(0).toUpperCase() }}</span>
+        </div>
+        <div class="hero-info">
+          <h2>{{ l.action }}</h2>
+          <span class="email">{{ l.id }}</span>
+        </div>
+      </div>
+
+      <div class="detail-grid">
+        <div class="detail-section">
+          <h3>Event</h3>
+          <div class="detail-row">
+            <span class="label">Action</span>
+            <span class="value">{{ l.action }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Resource Type</span>
+            <span class="value">{{ l.resourceType ?? '—' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Resource ID</span>
+            <span class="value">{{ l.resourceId ?? '—' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Created</span>
+            <span class="value">{{ l.createdAt | date:'medium' }}</span>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Actor</h3>
+          <div class="detail-row">
+            <span class="label">Actor ID</span>
+            <span class="value">{{ l.actorId ?? '—' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">IP Address</span>
+            <span class="value">{{ l.ipAddress ?? '—' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">User Agent</span>
+            <span class="value">{{ l.userAgent ?? '—' }}</span>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Tracking</h3>
+          <div class="detail-row">
+            <span class="label">Correlation ID</span>
+            <span class="value">{{ l.correlationId ?? '—' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Trace ID</span>
+            <span class="value">{{ l.traceId ?? '—' }}</span>
+          </div>
+        </div>
+
+        @if (l.metadata) {
+          <div class="detail-section detail-section--full">
+            <h3>Metadata</h3>
+            <pre class="metadata-block">{{ l.metadata | json }}</pre>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

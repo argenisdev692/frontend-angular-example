@@ -39,6 +39,7 @@ export class SidebarComponent {
     { icon: 'pi pi-chart-line', label: 'Analytics', route: '/analytics', active: false },
     { icon: 'pi pi-users', label: 'Users', route: '/users', active: false },
     { icon: 'pi pi-tags', label: 'Blog Categories', route: '/blog-categories', active: false },
+    { icon: 'pi pi-history', label: 'Activity Logs', route: '/activity-logs', active: false },
     { icon: 'pi pi-briefcase', label: 'Projects', route: '/projects', active: false },
     { icon: 'pi pi-building', label: 'Company Data', route: '/company-data', active: false },
     { icon: 'pi pi-cog', label: 'Settings', route: '/settings', active: false },
@@ -55,7 +56,7 @@ export class SidebarComponent {
     if (!u) return '?';
     const first = u.name?.charAt(0) ?? '';
     const last = u.lastName?.charAt(0) ?? '';
-    return (first + last).toUpperCase() || u.username.charAt(0).toUpperCase();
+    return (first + last).toUpperCase() || u.email.charAt(0).toUpperCase();
   }
 
   get primaryRole(): string {

@@ -8,7 +8,6 @@ import { firstValueFrom } from 'rxjs';
 import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
-import { UserResponse } from '../models/user-response';
 
 import { authControllerChangePassword } from '../fn/auth/auth-controller-change-password';
 import { AuthControllerChangePassword$Params } from '../fn/auth/auth-controller-change-password';
@@ -421,7 +420,7 @@ export class AuthService extends BaseService {
    *
    * This method doesn't expect any request body.
    */
-  authControllerMe$Response(params?: AuthControllerMe$Params, context?: HttpContext): Promise<StrictHttpResponse<UserResponse>> {
+  authControllerMe$Response(params?: AuthControllerMe$Params, context?: HttpContext): Promise<StrictHttpResponse<void>> {
     const obs = authControllerMe(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
@@ -436,9 +435,9 @@ export class AuthService extends BaseService {
    *
    * This method doesn't expect any request body.
    */
-  authControllerMe(params?: AuthControllerMe$Params, context?: HttpContext): Promise<UserResponse> {
+  authControllerMe(params?: AuthControllerMe$Params, context?: HttpContext): Promise<void> {
     const resp = this.authControllerMe$Response(params, context);
-    return resp.then((r: StrictHttpResponse<UserResponse>): UserResponse => r.body);
+    return resp.then((r: StrictHttpResponse<void>): void => r.body);
   }
 
   /** Path part for operation `authControllerUpdateMe()` */

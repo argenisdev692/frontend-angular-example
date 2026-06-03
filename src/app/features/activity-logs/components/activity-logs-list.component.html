@@ -1,0 +1,88 @@
+<app-sidebar [visible]="drawerVisible()" (visibleChange)="drawerVisible.set($event)"></app-sidebar>
+
+<div class="activity-logs-page">
+  <app-page-header
+    title="Activity Logs"
+    subtitle="System activity and audit trail"
+    (menuToggle)="drawerVisible.set(true)" />
+
+  <app-advanced-filter
+    searchPlaceholder="Search logs..."
+    [fields]="filterFields"
+    (filtersChange)="onFiltersChange($event)"
+    (exportPdf)="onExportPdf()"
+    (exportExcel)="onExportExcel()" />
+
+  <div class="card-modern table-card">
+    <p-table
+      [value]="logs()"
+      [loading]="isLoading()"
+      [paginator]="false"
+      [rows]="limit()"
+      [totalRecords]="total()"
+      [tableStyle]="{ 'min-width': '100%' }"
+      styleClass="crud-table">
+      <ng-template pTemplate="header">
+        <tr>
+          @for (col of tableColumns; track col.field) {
+            <th>
+              {{ col.header }}
+            </th>
+          }
+          <th class="actions-header">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-log>
+        <tr>
+          <td>
+            <span class="action-badge">{{ log.action ?? '—' }}</span>
+          </td>
+          <td>{{ log.actorId ?? '—' }}</td>
+          <td>{{ log.resourceType ?? '—' }}</td>
+          <td>{{ log.resourceId ?? '—' }}</td>
+          <td>{{ log.ipAddress ?? '—' }}</td>
+          <td>{{ log.createdAt | date:'medium' }}</td>
+          <td>
+            <div class="actions-cell">
+              <button
+                class="btn-crud-action btn-crud-action-view"
+                type="button"
+                (click)="onView(log.id)"
+                title="View">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+              <button
+                class="btn-crud-action btn-crud-action-delete"
+                type="button"
+                (click)="onDelete(log.id)"
+                title="Delete">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td [attr.colspan]="tableColumns.length + 1" class="empty-cell">
+            <div class="crud-empty-state">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+              <p>No activity logs found</p>
+              <span>Try adjusting your filters or search terms</span>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <p-paginator
+      [rows]="limit()"
+      [totalRecords]="total()"
+      [first]="((page() - 1) * limit())"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      (onPageChange)="onPageChange($event)"
+      styleClass="modern-paginator" />
+  </div>
+</div>

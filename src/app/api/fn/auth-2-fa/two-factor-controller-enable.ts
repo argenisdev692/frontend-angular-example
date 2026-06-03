@@ -7,13 +7,16 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { EnableTotpDto } from '../../models/enable-totp-dto';
 
-export interface AuthControllerMe$Params {
+export interface TwoFactorControllerEnable$Params {
+      body: EnableTotpDto
 }
 
-export function authControllerMe(http: HttpClient, rootUrl: string, params?: AuthControllerMe$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
-  const rb = new RequestBuilder(rootUrl, authControllerMe.PATH, 'get');
+export function twoFactorControllerEnable(http: HttpClient, rootUrl: string, params: TwoFactorControllerEnable$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+  const rb = new RequestBuilder(rootUrl, twoFactorControllerEnable.PATH, 'post');
   if (params) {
+    rb.body(params.body, 'application/json');
   }
 
   return http.request(
@@ -26,4 +29,4 @@ export function authControllerMe(http: HttpClient, rootUrl: string, params?: Aut
   );
 }
 
-authControllerMe.PATH = '/api/v1/auth/me';
+twoFactorControllerEnable.PATH = '/api/v1/auth/two-factor/enable';

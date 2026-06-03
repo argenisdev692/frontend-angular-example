@@ -6,8 +6,7 @@ import { KanbanBoardComponent } from './components/kanban-board/kanban-board.com
 import { FloatingMenuButtonComponent } from './components/floating-menu-button/floating-menu-button.component';
 import { ClaimsChartComponent } from './components/claims-chart/claims-chart.component';
 import { RecentActivityComponent } from './components/recent-activity/recent-activity.component';
-import { AuthService } from './api/services/auth.service';
-import { UserResponse } from './api/models/user-response';
+import { AuthFeatureService } from './features/auth/services/auth.service';
 import { CompanyDataService } from './api/services/company-data.service';
 import { CompanyDataResponse } from './api/models/company-data-response';
 
@@ -18,14 +17,12 @@ import { CompanyDataResponse } from './api/models/company-data-response';
   styleUrl: './dashboard.css'
 })
 export class DashboardComponent implements OnInit {
-  private authService = inject(AuthService);
+  private authFeatureService = inject(AuthFeatureService);
   private companyDataService = inject(CompanyDataService);
 
   // Controls the PrimeNG drawer menu visibility.
   protected readonly drawerVisible = signal(false);
 
-  // User data from /me endpoint
-  protected readonly user = signal<UserResponse | null>(null);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
 
@@ -37,7 +34,8 @@ export class DashboardComponent implements OnInit {
   protected readonly headerSubtitle = computed(() => {
     if (this.loading()) return 'Loading...';
     if (this.error()) return 'Error loading user data';
-    if (this.user()) return `Welcome back, ${this.user()?.name} ${this.user()?.lastName}`;
+    const u = this.authFeatureService.currentUser();
+    if (u) return `Welcome back, ${u.name} ${u.lastName}`;
     return '';
   });
 
@@ -50,8 +48,7 @@ export class DashboardComponent implements OnInit {
     try {
       this.loading.set(true);
       this.error.set(null);
-      const userData = await this.authService.authControllerMe();
-      this.user.set(userData);
+      await this.authFeatureService.fetchCurrentUser();
     } catch {
       this.error.set('Failed to load user data');
     } finally {

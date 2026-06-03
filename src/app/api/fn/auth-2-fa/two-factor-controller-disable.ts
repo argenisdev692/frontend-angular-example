@@ -8,11 +8,11 @@ import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
 
-export interface AuthControllerMe$Params {
+export interface TwoFactorControllerDisable$Params {
 }
 
-export function authControllerMe(http: HttpClient, rootUrl: string, params?: AuthControllerMe$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
-  const rb = new RequestBuilder(rootUrl, authControllerMe.PATH, 'get');
+export function twoFactorControllerDisable(http: HttpClient, rootUrl: string, params?: TwoFactorControllerDisable$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+  const rb = new RequestBuilder(rootUrl, twoFactorControllerDisable.PATH, 'post');
   if (params) {
   }
 
@@ -26,4 +26,4 @@ export function authControllerMe(http: HttpClient, rootUrl: string, params?: Aut
   );
 }
 
-authControllerMe.PATH = '/api/v1/auth/me';
+twoFactorControllerDisable.PATH = '/api/v1/auth/two-factor/disable';

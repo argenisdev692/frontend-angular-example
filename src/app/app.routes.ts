@@ -20,5 +20,10 @@ export const routes: Routes = [
     loadChildren: () => import('./features/blog-categories/blog-categories.routes').then((m) => m.blogCategoriesRoutes),
     canActivate: [authGuard],
   },
+  {
+    path: 'activity-logs',
+    loadChildren: () => import('./features/activity-logs/activity-logs.routes').then((m) => m.activityLogsRoutes),
+    canActivate: [authGuard],
+  },
   { path: '', redirectTo: '/login', pathMatch: 'full' }
 ];

@@ -8,11 +8,11 @@ import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
 
-export interface AuthControllerMe$Params {
+export interface TwoFactorControllerRegenerate$Params {
 }
 
-export function authControllerMe(http: HttpClient, rootUrl: string, params?: AuthControllerMe$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
-  const rb = new RequestBuilder(rootUrl, authControllerMe.PATH, 'get');
+export function twoFactorControllerRegenerate(http: HttpClient, rootUrl: string, params?: TwoFactorControllerRegenerate$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+  const rb = new RequestBuilder(rootUrl, twoFactorControllerRegenerate.PATH, 'post');
   if (params) {
   }
 
@@ -26,4 +26,4 @@ export function authControllerMe(http: HttpClient, rootUrl: string, params?: Aut
   );
 }
 
-authControllerMe.PATH = '/api/v1/auth/me';
+twoFactorControllerRegenerate.PATH = '/api/v1/auth/two-factor/backup-codes/regenerate';

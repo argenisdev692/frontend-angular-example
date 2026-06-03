@@ -33,6 +33,14 @@ export type { AuthControllerUpdateMe$Params as AuthControllerUpdateMe$Params } f
 export { authControllerUpdateMe as authControllerUpdateMe } from './fn/auth/auth-controller-update-me';
 export type { AuthControllerUploadPhoto$Params as AuthControllerUploadPhoto$Params } from './fn/auth/auth-controller-upload-photo';
 export { authControllerUploadPhoto as authControllerUploadPhoto } from './fn/auth/auth-controller-upload-photo';
+export type { TwoFactorControllerSetup$Params as TwoFactorControllerSetup$Params } from './fn/auth-2-fa/two-factor-controller-setup';
+export { twoFactorControllerSetup as twoFactorControllerSetup } from './fn/auth-2-fa/two-factor-controller-setup';
+export type { TwoFactorControllerEnable$Params as TwoFactorControllerEnable$Params } from './fn/auth-2-fa/two-factor-controller-enable';
+export { twoFactorControllerEnable as twoFactorControllerEnable } from './fn/auth-2-fa/two-factor-controller-enable';
+export type { TwoFactorControllerDisable$Params as TwoFactorControllerDisable$Params } from './fn/auth-2-fa/two-factor-controller-disable';
+export { twoFactorControllerDisable as twoFactorControllerDisable } from './fn/auth-2-fa/two-factor-controller-disable';
+export type { TwoFactorControllerRegenerate$Params as TwoFactorControllerRegenerate$Params } from './fn/auth-2-fa/two-factor-controller-regenerate';
+export { twoFactorControllerRegenerate as twoFactorControllerRegenerate } from './fn/auth-2-fa/two-factor-controller-regenerate';
 export type { SessionsControllerListSessions$Params as SessionsControllerListSessions$Params } from './fn/auth-sessions/sessions-controller-list-sessions';
 export { sessionsControllerListSessions as sessionsControllerListSessions } from './fn/auth-sessions/sessions-controller-list-sessions';
 export type { SessionsControllerRevokeSession$Params as SessionsControllerRevokeSession$Params } from './fn/auth-sessions/sessions-controller-revoke-session';
@@ -269,3 +277,9 @@ export type { CampaignsControllerDeleteCampaign$Params as CampaignsControllerDel
 export { campaignsControllerDeleteCampaign as campaignsControllerDeleteCampaign } from './fn/campaigns/campaigns-controller-delete-campaign';
 export type { CampaignsControllerBulkDeleteCampaigns$Params as CampaignsControllerBulkDeleteCampaigns$Params } from './fn/campaigns/campaigns-controller-bulk-delete-campaigns';
 export { campaignsControllerBulkDeleteCampaigns as campaignsControllerBulkDeleteCampaigns } from './fn/campaigns/campaigns-controller-bulk-delete-campaigns';
+export type { ActivityLogControllerFindAll$Params as ActivityLogControllerFindAll$Params } from './fn/activity-logs/activity-log-controller-find-all';
+export { activityLogControllerFindAll as activityLogControllerFindAll } from './fn/activity-logs/activity-log-controller-find-all';
+export type { ActivityLogControllerFindOne$Params as ActivityLogControllerFindOne$Params } from './fn/activity-logs/activity-log-controller-find-one';
+export { activityLogControllerFindOne as activityLogControllerFindOne } from './fn/activity-logs/activity-log-controller-find-one';
+export type { ActivityLogControllerRemove$Params as ActivityLogControllerRemove$Params } from './fn/activity-logs/activity-log-controller-remove';
+export { activityLogControllerRemove as activityLogControllerRemove } from './fn/activity-logs/activity-log-controller-remove';

@@ -189,12 +189,21 @@
           @if (user()?.totpEnabled) {
             <div class="totp-info">
               <p><i class="pi pi-shield" style="color: var(--accent-success)"></i> TOTP is currently enabled.</p>
-              <p-button
-                label="Disable 2FA"
-                icon="pi pi-lock-open"
-                severity="danger"
-                [text]="true"
-                (onClick)="disableTotp()" />
+              <div class="totp-actions">
+                <p-button
+                  label="Regenerate Codes"
+                  icon="pi pi-refresh"
+                  severity="secondary"
+                  [text]="true"
+                  (onClick)="regenerateBackupCodes()" />
+                <p-button
+                  [label]="confirmingDisable() ? 'Confirm Disable' : 'Disable 2FA'"
+                  icon="pi pi-lock-open"
+                  severity="danger"
+                  [text]="true"
+                  [loading]="savingTotp()"
+                  (onClick)="disableTotp()" />
+              </div>
             </div>
           } @else {
             <div class="totp-info">
@@ -203,6 +212,7 @@
                 label="Enable 2FA"
                 icon="pi pi-shield"
                 styleClass="btn-primary-modern"
+                [loading]="totpSetupLoading()"
                 (onClick)="enableTotp()" />
             </div>
           }
@@ -282,3 +292,106 @@
   [aspectRatio]="1"
   [circular]="true"
   (cropped)="onCropped($event)" />
+
+<!-- TOTP Setup Dialog -->
+<p-dialog
+  [visible]="totpSetupVisible()"
+  (visibleChange)="closeTotpSetup()"
+  [modal]="true"
+  [closable]="false"
+  [draggable]="false"
+  [resizable]="false"
+  header="Set Up Two-Factor Authentication"
+  styleClass="totp-dialog"
+  appendTo="body">
+
+  <div class="totp-setup-content">
+    @if (totpSetupLoading()) {
+      <div class="totp-loading">
+        <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+        <p>Generating your secure key...</p>
+      </div>
+    } @else if (totpSetupData()) {
+      <div class="totp-qr-section">
+        <p class="totp-instruction">Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)</p>
+        <div class="qr-wrapper">
+          <img [src]="totpSetupData()?.qrCodeUrl" alt="TOTP QR Code" class="totp-qr" />
+        </div>
+        @if (totpSetupData()?.manualEntryKey) {
+          <div class="manual-key">
+            <span class="manual-label">Manual entry key:</span>
+            <code class="manual-value">{{ totpSetupData()?.manualEntryKey }}</code>
+          </div>
+        }
+      </div>
+
+      <div class="totp-code-section">
+        <label for="totpCode">Enter the 6-digit code from your app</label>
+        <input
+          pInputText
+          id="totpCode"
+          type="text"
+          maxlength="6"
+          inputmode="numeric"
+          pattern="[0-9]*"
+          autocomplete="one-time-code"
+          [ngModel]="totpCode()"
+          (ngModelChange)="totpCode.set($event)"
+          class="form-input totp-input"
+          placeholder="000000" />
+      </div>
+    }
+  </div>
+
+  <ng-template #footer>
+    <div class="totp-dialog-footer">
+      <p-button
+        label="Cancel"
+        icon="pi pi-times"
+        severity="secondary"
+        [text]="true"
+        (onClick)="closeTotpSetup()" />
+      <p-button
+        label="Verify & Enable"
+        icon="pi pi-check"
+        styleClass="btn-primary-modern"
+        [loading]="savingTotp()"
+        [disabled]="!totpCode() || totpCode().length < 6"
+        (onClick)="confirmTotpSetup()" />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Backup Codes Dialog -->
+<p-dialog
+  [visible]="backupCodesVisible()"
+  (visibleChange)="backupCodesVisible.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  header="Backup Codes"
+  styleClass="backup-codes-dialog"
+  appendTo="body">
+
+  <div class="backup-codes-content">
+    <p class="backup-warning">
+      <i class="pi pi-exclamation-circle" style="color: var(--accent-warning)"></i>
+      Save these codes in a secure place. They will not be shown again.
+    </p>
+    <div class="backup-codes-grid">
+      @for (code of backupCodes(); track code) {
+        <code class="backup-code">{{ code }}</code>
+      }
+    </div>
+  </div>
+
+  <ng-template #footer>
+    <div class="backup-codes-footer">
+      <p-button
+        label="Close"
+        icon="pi pi-check"
+        styleClass="btn-primary-modern"
+        (onClick)="backupCodesVisible.set(false)" />
+    </div>
+  </ng-template>
+</p-dialog>

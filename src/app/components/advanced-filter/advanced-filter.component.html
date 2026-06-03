@@ -76,7 +76,7 @@
               <p-select
                 [options]="field.options ?? []"
                 [ngModel]="getFilterValue(field.key)"
-                (onChange)="onFieldChange(field.key, $event?.value ?? $event)"
+                (onChange)="onFieldChange(field.key, $event.value ?? $event)"
                 optionLabel="label"
                 optionValue="value"
                 [placeholder]="field.placeholder ?? 'All'"

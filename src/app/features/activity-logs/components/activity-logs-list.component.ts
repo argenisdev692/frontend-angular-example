@@ -4,7 +4,7 @@ import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { PaginatorModule } from 'primeng/paginator';
 
-import { BlogCategoriesFeatureService } from '../services/blog-categories-feature.service';
+import { ActivityLogsFeatureService } from '../services/activity-logs-feature.service';
 import {
   AdvancedFilterComponent,
   FilterField,
@@ -14,7 +14,7 @@ import { SidebarComponent } from '../../../components/sidebar/sidebar.component'
 import { CrudListBase } from '../../../shared/crud-list-base';
 
 @Component({
-  selector: 'app-blog-categories-list',
+  selector: 'app-activity-logs-list',
   standalone: true,
   imports: [
     CommonModule,
@@ -26,27 +26,27 @@ import { CrudListBase } from '../../../shared/crud-list-base';
     PageHeaderComponent,
     SidebarComponent,
   ],
-  templateUrl: './blog-categories-list.component.html',
-  styleUrl: './blog-categories-list.component.css',
+  templateUrl: './activity-logs-list.component.html',
+  styleUrl: './activity-logs-list.component.css',
 })
-export class BlogCategoriesListComponent extends CrudListBase<any> {
-  private api = inject(BlogCategoriesFeatureService);
+export class ActivityLogsListComponent extends CrudListBase<any> {
+  private api = inject(ActivityLogsFeatureService);
 
   override get service() {
     return this.api;
   }
 
   get entityName(): string {
-    return 'category';
+    return 'activity log';
   }
   get newRoute(): string {
-    return '/blog-categories/new';
+    return '/activity-logs';
   }
   get viewRoutePrefix(): string {
-    return '/blog-categories';
+    return '/activity-logs';
   }
   get editRoutePrefix(): string {
-    return '/blog-categories';
+    return '/activity-logs';
   }
 
   get filterFields(): FilterField[] {
@@ -55,7 +55,25 @@ export class BlogCategoriesListComponent extends CrudListBase<any> {
         key: 'dateRange',
         label: 'Date range',
         type: 'date-range',
-        placeholder: 'Start — End',
+        placeholder: 'Start \u2014 End',
+      },
+      {
+        key: 'action',
+        label: 'Action',
+        type: 'text',
+        placeholder: 'Filter by action...',
+      },
+      {
+        key: 'actorId',
+        label: 'Actor ID',
+        type: 'text',
+        placeholder: 'Filter by actor...',
+      },
+      {
+        key: 'resourceType',
+        label: 'Resource Type',
+        type: 'text',
+        placeholder: 'Filter by resource type...',
       },
       {
         key: 'status',
@@ -73,8 +91,11 @@ export class BlogCategoriesListComponent extends CrudListBase<any> {
 
   get tableColumns() {
     return [
-      { field: 'name', header: 'Name', sortable: true },
-      { field: 'description', header: 'Description', sortable: false },
+      { field: 'action', header: 'Action', sortable: false },
+      { field: 'actorId', header: 'Actor', sortable: false },
+      { field: 'resourceType', header: 'Resource Type', sortable: false },
+      { field: 'resourceId', header: 'Resource ID', sortable: false },
+      { field: 'ipAddress', header: 'IP Address', sortable: false },
       { field: 'createdAt', header: 'Created', sortable: true },
     ];
   }
@@ -85,9 +106,13 @@ export class BlogCategoriesListComponent extends CrudListBase<any> {
     filters: Record<string, unknown>
   ): Record<string, unknown> {
     const params: Record<string, unknown> = {
-      skip: (page - 1) * limit,
+      page,
       limit,
     };
+
+    if (filters['search']) {
+      params['search'] = filters['search'];
+    }
 
     const dateRange = filters['dateRange'] as Date[] | undefined;
     if (dateRange?.[0]) {
@@ -95,6 +120,16 @@ export class BlogCategoriesListComponent extends CrudListBase<any> {
     }
     if (dateRange?.[1]) {
       params['end_date'] = this.toIsoDate(dateRange[1]);
+    }
+
+    if (filters['action']) {
+      params['action'] = filters['action'];
+    }
+    if (filters['actorId']) {
+      params['actorId'] = filters['actorId'];
+    }
+    if (filters['resourceType']) {
+      params['resourceType'] = filters['resourceType'];
     }
 
     const status = filters['status'] as string | undefined;
@@ -115,11 +150,6 @@ export class BlogCategoriesListComponent extends CrudListBase<any> {
     return response?.total ?? 0;
   }
 
-  // ── Aliases for template compatibility ──
-  readonly categories = this.items;
-  readonly categoriesResource = this.dataResource;
-
-  isDeleted(category: any): boolean {
-    return this.isTrashed(category);
-  }
+  readonly logs = this.items;
+  readonly logsResource = this.dataResource;
 }

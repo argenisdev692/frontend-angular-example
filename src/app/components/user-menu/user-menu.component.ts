@@ -23,7 +23,7 @@ export class UserMenuComponent {
     if (!u) return '?';
     const first = u.name?.charAt(0) ?? '';
     const last = u.lastName?.charAt(0) ?? '';
-    return (first + last).toUpperCase() || u.username.charAt(0).toUpperCase();
+    return (first + last).toUpperCase() || (u.username?.charAt(0) ?? '').toUpperCase();
   });
 
   protected readonly primaryRole = computed(() => {

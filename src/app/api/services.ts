@@ -4,6 +4,7 @@
 export { AppService } from './services/app.service';
 export { HealthService } from './services/health.service';
 export { AuthService } from './services/auth.service';
+export { Auth2FaService } from './services/auth-2-fa.service';
 export { AuthSessionsService } from './services/auth-sessions.service';
 export { AuthSocialService } from './services/auth-social.service';
 export { CompanyDataService } from './services/company-data.service';
@@ -19,3 +20,4 @@ export { BackupsService } from './services/backups.service';
 export { PostsService } from './services/posts.service';
 export { SocialMediaService } from './services/social-media.service';
 export { CampaignsService } from './services/campaigns.service';
+export { ActivityLogsService } from './services/activity-logs.service';
