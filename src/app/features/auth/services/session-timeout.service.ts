@@ -2,7 +2,7 @@ import { Injectable, inject, PLATFORM_ID, effect, DestroyRef } from '@angular/co
 import { Router } from '@angular/router';
 import { AuthFeatureService } from './auth.service';
 import { isPlatformBrowser } from '@angular/common';
-import { fromEvent, Subject } from 'rxjs';
+import { fromEvent, Subject, Subscription } from 'rxjs';
 import { takeUntil, debounceTime } from 'rxjs/operators';
 
 @Injectable({ providedIn: 'root' })
@@ -21,67 +21,70 @@ export class SessionTimeoutService {
 
   // State
   private destroy$ = new Subject<void>();
+  private timerReset$ = new Subject<void>();
   private userActivity$ = new Subject<void>();
   private showWarning = false;
   private isRefreshing = false;
   private lastRefreshCheck = 0;
+  private refreshIntervalId: ReturnType<typeof setInterval> | null = null;
+  private timerSubs: Subscription[] = [];
   private readonly REFRESH_THROTTLE_MS = 30_000; // Max 1 refresh check per 30s
 
   constructor() {
     if (isPlatformBrowser(this.platformId)) {
       this.initializeActivityDetection();
       this.startInactivityMonitoring();
-      
-      // Complete destroy$ when service is destroyed
+
+      // Complete subjects when service is destroyed
       this.destroyRef.onDestroy(() => {
+        this.clearAll();
         this.destroy$.next();
         this.destroy$.complete();
+        this.timerReset$.complete();
       });
     }
   }
 
-  private initializeActivityDetection(): void {
-    // Track user activity events
-    const events = [
-      'mousemove',
-      'mousedown',
-      'keypress',
-      'scroll',
-      'touchstart',
-      'click'
-    ];
+  /** Clear all active timers and subscriptions. */
+  private clearAll(): void {
+    this.timerReset$.next();
+    this.timerSubs.forEach((sub) => sub.unsubscribe());
+    this.timerSubs = [];
+    if (this.refreshIntervalId !== null) {
+      clearInterval(this.refreshIntervalId);
+      this.refreshIntervalId = null;
+    }
+    this.showWarning = false;
+    this.removeWarningUI();
+  }
 
-    events.forEach(eventName => {
-      fromEvent(document, eventName).pipe(
-        takeUntil(this.destroy$)
-      ).subscribe(() => {
-        this.onUserActivity();
-      });
+  private initializeActivityDetection(): void {
+    const events = ['mousemove', 'mousedown', 'keypress', 'scroll', 'touchstart', 'click'];
+
+    events.forEach((eventName) => {
+      fromEvent(document, eventName)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => {
+          this.onUserActivity();
+        });
     });
   }
 
   private onUserActivity(): void {
-    // Reset activity on any user interaction
     this.userActivity$.next();
-
-    // Proactively refresh token if it's about to expire
     this.tryRefreshToken();
 
-    // Hide warning if shown
     if (this.showWarning) {
       this.showWarning = false;
       this.removeWarningUI();
     }
   }
 
+  /** Check if token is about to expire and refresh it (throttled). */
   private tryRefreshToken(): void {
     const now = Date.now();
-
-    // Throttle: max 1 check every 30 seconds
     if (now - this.lastRefreshCheck < this.REFRESH_THROTTLE_MS) return;
     this.lastRefreshCheck = now;
-
-    // Avoid duplicate concurrent refresh calls
     if (this.isRefreshing) return;
 
     const token = this.authService.token();
@@ -94,67 +97,80 @@ export class SessionTimeoutService {
 
       const expiresInMs = exp * 1000 - Date.now();
       if (expiresInMs > 0 && expiresInMs < this.REFRESH_BUFFER_MS) {
-        // Token expires within 5 minutes — refresh silently
         this.isRefreshing = true;
-        this.authService.refreshToken()
-          .then(() => { this.lastRefreshCheck = Date.now(); })
-          .catch(() => {
-            // Refresh failed; guard will handle it on next route change
+        this.authService
+          .refreshToken()
+          .then(() => {
+            this.lastRefreshCheck = Date.now();
           })
-          .finally(() => { this.isRefreshing = false; });
+          .catch(() => {
+            // Refresh failed; interceptor or guard will handle it on next request
+          })
+          .finally(() => {
+            this.isRefreshing = false;
+          });
       }
     } catch {
       // Malformed token; ignore
     }
   }
 
+  /** Periodic check that runs every minute, even without user activity. */
+  private startPeriodicTokenCheck(): void {
+    if (this.refreshIntervalId !== null) return; // already running
+
+    this.refreshIntervalId = setInterval(() => {
+      this.tryRefreshToken();
+    }, 60_000); // every 1 minute
+  }
+
   private startInactivityMonitoring(): void {
-    // Monitor authentication state
     effect(() => {
       const isAuthenticated = this.authService.isAuthenticated();
-      
+
       if (isAuthenticated) {
         this.startInactivityTimer();
+        this.startPeriodicTokenCheck();
       } else {
-        this.stopInactivityTimer();
+        this.clearAll();
       }
     });
   }
 
   private startInactivityTimer(): void {
-    // Reset activity to start fresh timer
+    // Clear previous timers before creating new ones
+    this.timerReset$.next();
+    this.timerSubs.forEach((sub) => sub.unsubscribe());
+    this.timerSubs = [];
+
+    // Reset activity to start fresh
     this.userActivity$.next();
 
-    // Warning timer
-    this.userActivity$.pipe(
+    // Warning timer (15 min - 1 min = 14 min of inactivity)
+    const warningSub = this.userActivity$.pipe(
       debounceTime(this.TIMEOUT_MS - this.WARNING_MS),
-      takeUntil(this.destroy$)
+      takeUntil(this.timerReset$)
     ).subscribe(() => {
       if (this.authService.isAuthenticated()) {
         this.showWarning = true;
         this.showWarningUI();
       }
     });
+    this.timerSubs.push(warningSub);
 
-    // Logout timer
-    this.userActivity$.pipe(
+    // Logout timer (15 min of inactivity)
+    const logoutSub = this.userActivity$.pipe(
       debounceTime(this.TIMEOUT_MS),
-      takeUntil(this.destroy$)
+      takeUntil(this.timerReset$)
     ).subscribe(() => {
       if (this.authService.isAuthenticated()) {
         this.handleSessionTimeout();
       }
     });
-  }
-
-  private stopInactivityTimer(): void {
-    // Timer is automatically reset by userActivity$ on next activity
-    this.showWarning = false;
-    this.removeWarningUI();
+    this.timerSubs.push(logoutSub);
   }
 
   private showWarningUI(): void {
-    // Create warning modal
     const warning = document.createElement('div');
     warning.id = 'session-warning';
     warning.style.cssText = `
@@ -168,23 +184,34 @@ export class SessionTimeoutService {
       z-index: 9999;
       box-shadow: 0 8px 24px rgba(245, 158, 11, 0.3);
       animation: slideIn 0.3s ease;
+      max-width: 360px;
     `;
 
     warning.innerHTML = `
       <div style="display: flex; align-items: center; gap: 12px;">
         <div style="color: var(--accent-warning); font-size: 20px;">⚠️</div>
-        <div>
+        <div style="flex: 1;">
           <div style="color: var(--text-primary); font-weight: 600; margin-bottom: 4px;">
             Session Expiring Soon
           </div>
           <div style="color: var(--text-secondary); font-size: 14px;">
             Your session will expire in ${this.WARNING_SECONDS} seconds due to inactivity.
+            Click <strong>Stay Active</strong> to continue.
           </div>
+          <button id="session-stay-active" style="
+            margin-top: 12px;
+            padding: 6px 16px;
+            background: var(--accent-warning);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+          ">Stay Active</button>
         </div>
       </div>
     `;
 
-    // Add animation styles
     const style = document.createElement('style');
     style.textContent = `
       @keyframes slideIn {
@@ -194,6 +221,14 @@ export class SessionTimeoutService {
     `;
     document.head.appendChild(style);
     document.body.appendChild(warning);
+
+    // Bind stay-active button
+    const btn = document.getElementById('session-stay-active');
+    if (btn) {
+      btn.addEventListener('click', () => {
+        this.resetTimer();
+      });
+    }
   }
 
   private removeWarningUI(): void {
@@ -204,22 +239,17 @@ export class SessionTimeoutService {
   }
 
   private async handleSessionTimeout(): Promise<void> {
-    // Save current URL for redirect after login
     const currentUrl = this.router.url;
     if (currentUrl !== '/login') {
       localStorage.setItem('intended_url', currentUrl);
     }
-
-    // Logout and redirect to login
     await this.authService.logout();
   }
 
-  // Public method to manually reset timer (e.g., after API calls)
   resetTimer(): void {
     this.userActivity$.next();
   }
 
-  // Get remaining time in seconds (for UI countdown if needed)
   getRemainingTime(): number {
     return this.WARNING_SECONDS;
   }

@@ -1,0 +1,104 @@
+<div class="filter-bar">
+  <!-- LEFT: search + advanced toggle -->
+  <div class="filter-bar__left">
+    <div class="search-box">
+      <svg class="search-box__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" />
+      </svg>
+      <input
+        class="search-box__input"
+        type="text"
+        [placeholder]="searchPlaceholder()"
+        [value]="search()"
+        (input)="onSearchInput($any($event.target).value)" />
+      @if (search()) {
+        <button class="search-box__clear" type="button" aria-label="Clear search" (click)="onSearchInput('')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
+        </button>
+      }
+    </div>
+
+    <button class="btn btn--ghost filter-toggle" type="button" [class.active]="advancedOpen()" (click)="toggleAdvanced()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" />
+      </svg>
+      <span>Filters</span>
+      @if (activeCount() > 0) {
+        <span class="filter-toggle__badge">{{ activeCount() }}</span>
+      }
+    </button>
+  </div>
+
+  <!-- RIGHT: actions -->
+  <div class="filter-bar__actions">
+    @if (showExportPdf()) {
+      <button class="btn btn--ghost" type="button" (click)="exportPdf.emit()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /></svg>
+        <span>PDF</span>
+      </button>
+    }
+    @if (showExportExcel()) {
+      <button class="btn btn--ghost" type="button" (click)="exportExcel.emit()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6M9 13l6 6M15 13l-6 6" /></svg>
+        <span>Excel</span>
+      </button>
+    }
+    @if (showCreate()) {
+      <button class="btn btn--primary" type="button" (click)="create.emit()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
+        <span>{{ createLabel() }}</span>
+      </button>
+    }
+  </div>
+
+  <!-- ADVANCED PANEL -->
+  @if (advancedOpen()) {
+    <div class="filter-panel">
+      @for (field of fields(); track field.key) {
+        <div class="filter-field">
+          <label>{{ field.label }}</label>
+
+          @switch (field.type) {
+            @case ('date-range') {
+              <p-datepicker
+                [ngModel]="getFilterValue(field.key)"
+                (ngModelChange)="onFieldChange(field.key, $event)"
+                selectionMode="range"
+                [readonlyInput]="true"
+                dateFormat="dd/mm/yy"
+                [placeholder]="field.placeholder ?? 'Start — End'"
+                [showButtonBar]="true"
+                appendTo="body"
+                styleClass="filter-datepicker" />
+            }
+            @case ('select') {
+              <p-select
+                [options]="field.options ?? []"
+                [ngModel]="getFilterValue(field.key)"
+                (onChange)="onFieldChange(field.key, $event?.value ?? $event)"
+                optionLabel="label"
+                optionValue="value"
+                [placeholder]="field.placeholder ?? 'All'"
+                [showClear]="true"
+                appendTo="body"
+                styleClass="filter-select" />
+            }
+            @case ('text') {
+              <input
+                type="text"
+                class="filter-text-input"
+                [placeholder]="field.placeholder ?? ''"
+                [ngModel]="getFilterValue(field.key)"
+                (ngModelChange)="setFilterValue(field.key, $event)" />
+            }
+          }
+        </div>
+      }
+
+      <div class="filter-panel__actions">
+        <button class="btn btn--ghost" type="button" (click)="clear()">Clear</button>
+        <button class="btn btn--primary" type="button" (click)="apply()">Apply</button>
+      </div>
+    </div>
+  }
+</div>

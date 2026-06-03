@@ -24,8 +24,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     ? req.url.startsWith(rootUrl)
     : req.url.includes('backend-aquashield-restoration-production.up.railway.app');
 
+  // Don't attach expired access token to refresh endpoint — backend may reject it
+  const isRefreshRequest = req.url.endsWith('/api/v1/auth/refresh');
+
   let outgoingReq = req;
-  if (token && isApiRequest) {
+  if (token && isApiRequest && !isRefreshRequest) {
     outgoingReq = req.clone({
       setHeaders: {
         Authorization: `Bearer ${token}`
