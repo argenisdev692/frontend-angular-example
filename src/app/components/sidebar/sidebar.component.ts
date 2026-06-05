@@ -38,6 +38,7 @@ export class SidebarComponent {
     { icon: 'pi pi-home', label: 'Dashboard', route: '/dashboard', active: true },
     { icon: 'pi pi-chart-line', label: 'Analytics', route: '/analytics', active: false },
     { icon: 'pi pi-users', label: 'Users', route: '/users', active: false },
+    { icon: 'pi pi-shield', label: 'Roles', route: '/roles', active: false },
     { icon: 'pi pi-tags', label: 'Blog Categories', route: '/blog-categories', active: false },
     { icon: 'pi pi-history', label: 'Activity Logs', route: '/activity-logs', active: false },
     { icon: 'pi pi-briefcase', label: 'Projects', route: '/projects', active: false },
