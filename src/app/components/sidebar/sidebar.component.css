@@ -234,33 +234,34 @@
   color: var(--accent-primary);
 }
 
-/* PrimeNG ToggleSwitch inside sidebar footer - subtle integration */
+/* PrimeNG ToggleSwitch — themed purely via design tokens so PrimeNG owns the
+   handle geometry (gap + inset-inline-start). Do NOT override the handle with
+   manual `transform`/`top`/`width`: that double-moves it and breaks alignment. */
 ::ng-deep .theme-toggle .p-toggleswitch {
   --p-toggleswitch-width: 2.75rem;
   --p-toggleswitch-height: 1.5rem;
+  --p-toggleswitch-gap: 0.1875rem;
+  --p-toggleswitch-handle-size: 1.125rem;
+  --p-toggleswitch-border-color: var(--border-default);
+  --p-toggleswitch-hover-border-color: var(--border-strong);
+  --p-toggleswitch-background: var(--border-default);
+  --p-toggleswitch-hover-background: var(--border-strong);
+  --p-toggleswitch-checked-background: var(--accent-primary);
+  --p-toggleswitch-checked-hover-background: var(--accent-secondary);
+  --p-toggleswitch-checked-border-color: var(--accent-primary);
+  --p-toggleswitch-checked-hover-border-color: var(--accent-secondary);
+  --p-toggleswitch-handle-background: var(--bg-elevated);
+  --p-toggleswitch-handle-hover-background: var(--bg-elevated);
+  --p-toggleswitch-handle-checked-background: #ffffff;
+  --p-toggleswitch-handle-checked-hover-background: #ffffff;
+  --p-toggleswitch-handle-color: var(--text-muted);
+  --p-toggleswitch-handle-hover-color: var(--text-secondary);
+  --p-toggleswitch-handle-checked-color: var(--accent-primary);
 }
 
-::ng-deep .theme-toggle .p-toggleswitch .p-toggleswitch-slider {
-  background: var(--border-default);
-  border: 1px solid var(--border-default);
-}
-
-::ng-deep .theme-toggle .p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-slider {
-  background: var(--grad-primary);
-  border-color: var(--border-strong);
-}
-
+/* Optically raise the handle within the track. PrimeNG centers it with
+   `top: 50%` + `margin-block-start: -(size/2)`; making that margin more
+   negative lifts the circle without disturbing the horizontal inset. */
 ::ng-deep .theme-toggle .p-toggleswitch .p-toggleswitch-handle {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-default);
-  /* Center the circle vertically inside the smaller slider track */
-  top: 50%;
-  transform: translateY(-50%);
-  width: calc(var(--p-toggleswitch-height, 1.5rem) - 4px);
-  height: calc(var(--p-toggleswitch-height, 1.5rem) - 4px);
-}
-
-/* Ensure the handle translates fully to the right when checked */
-::ng-deep .theme-toggle .p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-handle {
-  transform: translateX(calc(var(--p-toggleswitch-width, 2.75rem) - var(--p-toggleswitch-height, 1.5rem))) translateY(-50%);
+  margin-block-start: calc(-1 * (var(--p-toggleswitch-handle-size) / 2) - 2px);
 }

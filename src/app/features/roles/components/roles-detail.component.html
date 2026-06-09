@@ -36,10 +36,10 @@
     <div class="card-modern detail-card">
       <div class="detail-hero">
         <div class="role-avatar">
-          <span>{{ (r.name ?? '?').charAt(0).toUpperCase() }}</span>
+          <span>{{ r.name.charAt(0).toUpperCase() }}</span>
         </div>
         <div class="hero-info">
-          <h2>{{ r.name ?? 'Unnamed Role' }}</h2>
+          <h2>{{ r.name }}</h2>
           <div class="hero-badges">
             @if (isSystem()) {
               <span class="status-badge status-system">System</span>

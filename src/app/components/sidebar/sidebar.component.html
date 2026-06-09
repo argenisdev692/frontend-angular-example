@@ -3,11 +3,12 @@
   position="left"
   styleClass="app-drawer"
   [showCloseIcon]="true"
-  [modal]="false">
+  [modal]="true"
+  [dismissible]="true">
 
   <ng-template #header>
     <div class="logo">
-      <img src="/Logo%20PNG-WHITE.png" alt="Logo" class="logo-img" />
+      <img [src]="isDark() ? '/Logo%20PNG-WHITE.png' : '/Logo%20PNG.png'" alt="Logo" class="logo-img" />
       <span>{{ companyName() }}</span>
     </div>
   </ng-template>

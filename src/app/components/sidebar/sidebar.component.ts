@@ -72,14 +72,17 @@ export class SidebarComponent {
     this.themeService.set(checked ? 'dark' : 'light');
   }
 
+  // Navigate WITHOUT pre-closing the drawer. Each page mounts its own
+  // <app-sidebar>, so routing destroys this drawer while `visible` is still
+  // true — which is exactly the condition PrimeNG's Drawer.onDestroy() requires
+  // to remove its body-appended modal mask. Setting `visible=false` first would
+  // make onDestroy() skip that cleanup, leaving the dim overlay stuck on screen.
   goToProfile(): void {
-    this.visible.set(false);
     this.router.navigate(['/profile']);
   }
 
   navigate(route?: string): void {
     if (route) {
-      this.visible.set(false);
       this.router.navigate([route]);
     }
   }

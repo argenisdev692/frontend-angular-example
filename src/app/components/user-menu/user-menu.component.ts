@@ -1,22 +1,23 @@
-import { Component, inject, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, computed, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { ButtonModule } from 'primeng/button';
-import { MenuModule } from 'primeng/menu';
-import { MenuItem } from 'primeng/api';
 import { AuthFeatureService } from '../../features/auth/services/auth.service';
 
 @Component({
   selector: 'app-user-menu',
-  imports: [CommonModule, ButtonModule, MenuModule],
+  imports: [],
   templateUrl: './user-menu.component.html',
-  styleUrl: './user-menu.component.css'
+  styleUrl: './user-menu.component.css',
+  host: {
+    '(document:click)': 'close()',
+    '(document:keydown.escape)': 'close()'
+  }
 })
 export class UserMenuComponent {
   private authService = inject(AuthFeatureService);
   private router = inject(Router);
 
   protected readonly user = this.authService.currentUser;
+  protected readonly open = signal(false);
 
   protected readonly userInitials = computed(() => {
     const u = this.user();
@@ -31,22 +32,23 @@ export class UserMenuComponent {
     return roles && roles.length > 0 ? roles[0].name : 'User';
   });
 
-  protected readonly menuItems: MenuItem[] = [
-    {
-      label: 'Profile',
-      icon: 'pi pi-user',
-      command: () => this.router.navigate(['/profile'])
-    },
-    { separator: true },
-    {
-      label: 'Logout',
-      icon: 'pi pi-sign-out',
-      styleClass: 'menu-item-logout',
-      command: () => this.logout()
-    }
-  ];
+  // Stop the trigger click from reaching the document listener (which would re-close it).
+  toggle(event: Event): void {
+    event.stopPropagation();
+    this.open.update(v => !v);
+  }
+
+  close(): void {
+    this.open.set(false);
+  }
+
+  goToProfile(): void {
+    this.close();
+    this.router.navigate(['/profile']);
+  }
 
   async logout(): Promise<void> {
+    this.close();
     await this.authService.logout();
   }
 }

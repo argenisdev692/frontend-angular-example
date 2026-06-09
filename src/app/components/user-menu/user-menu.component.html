@@ -2,8 +2,11 @@
   <button
     type="button"
     class="user-menu-trigger"
-    (click)="menu.toggle($event)"
-    aria-label="User menu">
+    [class.active]="open()"
+    (click)="toggle($event)"
+    aria-label="User menu"
+    aria-haspopup="menu"
+    [attr.aria-expanded]="open()">
     @if (user()?.profilePhotoUrl) {
       <img
         [src]="user()?.profilePhotoUrl"
@@ -18,13 +21,20 @@
       <span class="user-menu-name">{{ user()?.name }} {{ user()?.lastName }}</span>
       <span class="user-menu-role">{{ primaryRole() }}</span>
     </div>
-    <i class="pi pi-chevron-down user-menu-chevron"></i>
+    <i class="pi pi-chevron-down user-menu-chevron" [class.open]="open()"></i>
   </button>
 
-  <p-menu
-    #menu
-    [model]="menuItems"
-    [popup]="true"
-    styleClass="user-dropdown-menu"
-    appendTo="body" />
+  @if (open()) {
+    <div class="user-dropdown" role="menu" (click)="$event.stopPropagation()">
+      <button type="button" class="user-dropdown__item" role="menuitem" (click)="goToProfile()">
+        <i class="pi pi-user"></i>
+        <span>Profile</span>
+      </button>
+      <div class="user-dropdown__separator"></div>
+      <button type="button" class="user-dropdown__item user-dropdown__item--danger" role="menuitem" (click)="logout()">
+        <i class="pi pi-sign-out"></i>
+        <span>Logout</span>
+      </button>
+    </div>
+  }
 </div>

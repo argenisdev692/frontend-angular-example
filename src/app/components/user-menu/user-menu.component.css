@@ -62,10 +62,21 @@
   line-height: 1.2;
 }
 
+.user-menu-trigger.active {
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
+}
+
 .user-menu-chevron {
   font-size: 10px;
   color: var(--text-muted);
   margin-left: var(--space-1);
+  transition: transform var(--transition);
+}
+
+.user-menu-chevron.open {
+  transform: rotate(180deg);
+  color: var(--accent-primary);
 }
 
 @media (max-width: 768px) {
@@ -75,101 +86,98 @@
 }
 
 /* ═══════════════════════════════════════════════════════
-   USER DROPDOWN MENU (PrimeNG p-menu popup, appended to body)
+   USER DROPDOWN — custom popup anchored to the trigger's right edge.
+   Right-aligned (right: 0) so it never drifts off-screen on desktop or mobile.
    ═══════════════════════════════════════════════════════ */
-::ng-deep .user-dropdown-menu.p-menu {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-xl);
-  box-shadow: 0 12px 32px color-mix(in srgb, var(--bg-void) 60%, transparent);
-  padding: var(--space-1);
-  min-width: 200px;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  margin-top: var(--space-2);
-}
-
-::ng-deep .user-dropdown-menu .p-menu-list {
+.user-dropdown {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  z-index: 1000;
+  min-width: 220px;
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  padding: 0;
-  margin: 0;
-  list-style: none;
+  padding: var(--space-2);
+  background: color-mix(in srgb, var(--bg-elevated) 92%, transparent);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 16px 40px color-mix(in srgb, var(--bg-void) 55%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  animation: user-dropdown-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-::ng-deep .user-dropdown-menu .p-menu-item {
-  border-radius: var(--radius-lg);
+@keyframes user-dropdown-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-::ng-deep .user-dropdown-menu .p-menu-item-content {
-  border-radius: var(--radius-lg);
-}
-
-::ng-deep .user-dropdown-menu .p-menu-item-link,
-::ng-deep .user-dropdown-menu .p-menu-item-content button {
+.user-dropdown__item {
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  width: 100%;
   padding: var(--space-2) var(--space-3);
   font-family: var(--font-sans);
   font-size: var(--text-sm);
   color: var(--text-secondary);
   background: transparent;
   border: none;
-  width: 100%;
+  border-radius: var(--radius-lg);
   text-align: left;
   cursor: pointer;
   transition: all var(--transition);
-  border-radius: var(--radius-lg);
 }
 
-::ng-deep .user-dropdown-menu .p-menu-item-link:hover,
-::ng-deep .user-dropdown-menu .p-menu-item-content button:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
-}
-
-::ng-deep .user-dropdown-menu .p-menu-item-icon {
-  color: var(--text-muted);
+.user-dropdown__item i {
   font-size: var(--text-base);
   width: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: var(--text-muted);
+  transition: color var(--transition);
 }
 
-::ng-deep .user-dropdown-menu .p-menu-item-link:hover .p-menu-item-icon {
-  color: var(--text-primary);
-}
-
-::ng-deep .user-dropdown-menu .p-menu-item-label {
+.user-dropdown__item span {
   flex: 1;
 }
 
-/* Separator line */
-::ng-deep .user-dropdown-menu .p-menu-separator {
+.user-dropdown__item:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.user-dropdown__item:hover i {
+  color: var(--text-primary);
+}
+
+.user-dropdown__separator {
   height: 1px;
   background: var(--border-default);
   margin: var(--space-1) 0;
 }
 
-/* Logout item - danger / destructive styling */
-::ng-deep .user-dropdown-menu .menu-item-logout .p-menu-item-link,
-::ng-deep .user-dropdown-menu .menu-item-logout button {
+/* Logout — destructive styling */
+.user-dropdown__item--danger,
+.user-dropdown__item--danger i {
   color: var(--accent-error);
 }
 
-::ng-deep .user-dropdown-menu .menu-item-logout .p-menu-item-icon {
-  color: var(--accent-error);
-}
-
-::ng-deep .user-dropdown-menu .menu-item-logout:hover .p-menu-item-link,
-::ng-deep .user-dropdown-menu .menu-item-logout:hover button {
+.user-dropdown__item--danger:hover {
   background: color-mix(in srgb, var(--accent-error) 12%, transparent);
   color: var(--accent-error);
 }
 
-::ng-deep .user-dropdown-menu .menu-item-logout:hover .p-menu-item-icon {
+.user-dropdown__item--danger:hover i {
   color: var(--accent-error);
+}
+
+/* On small screens, clamp width so it never exceeds the viewport */
+@media (max-width: 480px) {
+  .user-dropdown {
+    min-width: 200px;
+    max-width: calc(100vw - 2 * var(--space-4));
+  }
 }

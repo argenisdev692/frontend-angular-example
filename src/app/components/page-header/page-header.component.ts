@@ -1,8 +1,9 @@
-import { Component, input, output, signal, OnInit, viewChild, ElementRef } from '@angular/core';
+import { Component, input, output, signal, computed, inject, OnInit, viewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { UserMenuComponent } from '../user-menu/user-menu.component';
 import { AnimatedButtonComponent } from '../animated-button/animated-button.component';
+import { ThemeService } from '../../features/auth/services/theme.service';
 
 interface NotificationItem {
   title: string;
@@ -24,6 +25,10 @@ export class PageHeaderComponent implements OnInit {
   showNewClaim = input<boolean>(false);
 
   menuToggle = output<void>();
+
+  private themeService = inject(ThemeService);
+  // White logo on the dark theme, full-color logo on the light theme.
+  protected readonly isDark = computed(() => this.themeService.mode() === 'dark');
 
   notificationsOpen = signal(false);
   messagesOpen = signal(false);
