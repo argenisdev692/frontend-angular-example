@@ -55,13 +55,13 @@ src/app/features/[feature]/
 - List component with resource/rxResource using the generated service
 - Form component with Reactive Forms using generated DTOs
 - Detail component with computed signals using generated types
-- All components use PrimeNG unstyled with Pass Through
+- All components use PrimeNG v21 styled theming with Pass Through
 - All components use standalone Angular 21 syntax
 
 ## Type Generation
 - Re-exports TypeScript interfaces from `src/app/api/models/`
 - Uses the generated types for all API calls
-- No need for Zod validation (types are already generated from OpenAPI)
+- Generated types give **compile-time** safety only. For trust-boundary data (auth responses, anything rendered as HTML, money/permissions), still validate the **runtime** shape (e.g. Zod) per the OWASP skill.
 
 ## Example Output
 ```typescript
@@ -97,37 +97,36 @@ export class UsersFeatureService {
 }
 
 // list component
-import { Component, inject } from '@angular/core';
-import { resource } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, inject, resource } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { UsersFeatureService } from '../services/users.service';
-import { UserResponse } from '../../api/models';
 
 @Component({
   selector: 'app-users-list',
-  standalone: true,
-  imports: [CommonModule, TableModule, ButtonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TableModule, ButtonModule], // no CommonModule — control flow is built in
   template: `
     <div class="card-modern p-4">
-      <p-table 
-        [value]="usersResource.value() || []"
-        [pt]="{ root: '!bg-transparent !border-transparent' }"
-      >
+      <p-table [value]="usersResource.value() ?? []" [pt]="{ root: '!bg-transparent !border-transparent' }">
         <ng-template pTemplate="header">
           <tr>
-            <th *ngFor="let field of fields">{{ field }}</th>
+            @for (field of fields; track field) {
+              <th>{{ field }}</th>
+            }
             <th>Actions</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-user>
           <tr>
-            <td *ngFor="let field of fields">{{ user[field] }}</td>
+            @for (field of fields; track field) {
+              <td>{{ user[field] }}</td>
+            }
             <td>
-              <button pButton icon="pi pi-eye" class="btn-action btn-action-view" />
-              <button pButton icon="pi pi-pencil" class="btn-action btn-action-edit" />
-              <button pButton icon="pi pi-trash" class="btn-action btn-action-delete" />
+              <button pButton icon="pi pi-eye" class="btn-action btn-action-view" aria-label="View"></button>
+              <button pButton icon="pi pi-pencil" class="btn-action btn-action-edit" aria-label="Edit"></button>
+              <button pButton icon="pi pi-trash" class="btn-action btn-action-delete" aria-label="Delete"
+                      (click)="deleteUser(user.id)"></button>
             </td>
           </tr>
         </ng-template>
@@ -136,18 +135,18 @@ import { UserResponse } from '../../api/models';
   `
 })
 export class UsersListComponent {
-  private service = inject(UsersFeatureService);
+  private readonly service = inject(UsersFeatureService);
 
-  usersResource = resource({
+  // loader returns a Promise (ng-openapi-gen --promises true)
+  readonly usersResource = resource({
     loader: () => this.service.getAll()
   });
 
-  fields = ['id', 'name', 'email']; // fields from UserResponse
+  readonly fields = ['id', 'name', 'email']; // fields from UserResponse
 
-  deleteUser(id: string) {
-    this.service.delete(id).then(() => {
-      this.usersResource.reload();
-    });
+  async deleteUser(id: string): Promise<void> {
+    await this.service.delete(id);
+    this.usersResource.reload();
   }
 }
 ```
@@ -158,7 +157,7 @@ export class UsersListComponent {
 - Resource/rxResource for async operations
 - Signals for loading states
 - Reactive Forms with validation
-- PrimeNG unstyled with Pass Through
+- PrimeNG v21 styled theming with Pass Through
 - styles.css styling tokens
 - Type-safe API calls
 - Standalone components (Angular 21)

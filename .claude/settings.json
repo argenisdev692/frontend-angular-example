@@ -10,8 +10,7 @@
       "Bash(ng *)",
       "Bash(npx ng *)",
       "Bash(npx tsc*)",
-      "Bash(npx eslint*)",
-      "Bash(npx playwright *)",
+      "Bash(npx vitest*)",
       "Bash(git status)",
       "Bash(git diff*)",
       "Bash(git log*)",
@@ -47,7 +46,7 @@
     "filesystem": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-filesystem", "c:\\Users\\ARGENIS\\Documents\\PROYECTOS\\AQUASHIELD-CRM\\frontend"]
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "C:\\Users\\Lenovo\\Documents\\PROYECTOS\\AQUASHIELD-CRM\\frontend"]
     },
     "github": {
       "type": "http",
@@ -81,7 +80,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '[rules] always_on — use mcp__sequential-thinking__sequentialthinking FIRST, respond in English, npm/npx only, Angular 21 / PrimeNG unstyled.'"
+            "command": "echo '[rules] always_on — use mcp__sequential-thinking__sequentialthinking FIRST, respond in English, npm/npx only, Angular 21 zoneless / PrimeNG v21 styled theming.'"
           }
         ]
       }

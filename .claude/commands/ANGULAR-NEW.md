@@ -21,40 +21,33 @@ src/app/features/[feature]/
 
 ## Component Template
 ```typescript
-import { Component, signal, computed, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, signal, computed, inject } from '@angular/core';
 
 @Component({
   selector: 'app-[component-name]',
-  standalone: true,
-  imports: [CommonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  // imports: only what the template uses (e.g. ReactiveFormsModule, a PrimeNG module) — NOT CommonModule
   template: `
     <div class="card-modern">
-      <!-- Component content -->
+      <!-- Component content; use @if/@for/@switch for control flow -->
     </div>
-  `,
-  styles: []
+  `
 })
 export class [ComponentName]Component {
-  // State
-  private state = signal<StateType>(initialState);
-  
-  // Computed
-  readonly computedValue = computed(() => this.state().property);
-  
   // Services
-  private service = inject(ServiceName);
-  
-  // Methods
-  ngOnInit() {
-    // Initialization
-  }
+  private readonly service = inject(ServiceName);
+
+  // State
+  private readonly state = signal<StateType>(initialState);
+
+  // Derived state (prefer computed over ngOnInit for reactive setup)
+  readonly computedValue = computed(() => this.state().property);
 }
 ```
 
 ## Best Practices Applied
-- Standalone component (no standalone: true needed in v21)
-- Uses signals for state management
-- Uses inject() for dependency injection
-- Uses native control flow in template
-- Follows styles.css styling conventions
+- Standalone component — never write `standalone: true` (v21 default)
+- `ChangeDetectionStrategy.OnPush` (app is zoneless — state flows through signals)
+- No `CommonModule`; native control flow (`@if`/`@for`/`@switch`)
+- Uses `inject()` for dependency injection
+- Follows styles.css styling conventions and PrimeNG v21 styled theming

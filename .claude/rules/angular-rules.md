@@ -1,7 +1,8 @@
 # Angular 21 Development Rules
 
 ## Component Development
-- All components MUST be standalone (no `standalone: true` needed in v21)
+- All components MUST be standalone — NEVER write `standalone: true` (it is the v21 default)
+- Do NOT import `CommonModule` for control flow — `@if`/`@for`/`@switch` are built in; import only what the template uses
 - Set `changeDetection: ChangeDetectionStrategy.OnPush` in @Component decorator
 - Use `input()` and `output()` functions instead of `@Input()` and `@Output()` decorators
 - Use signals for state management: `signal()`, `computed()`, `effect()`
@@ -12,10 +13,11 @@
 - Use `NgOptimizedImage` for static images (not base64)
 
 ## State Management
+- The app is **zoneless** (`provideZonelessChangeDetection()`): there is no Zone.js — all UI updates must flow through signals
 - Use `signal()` for local component state
 - Use `computed()` for derived state
 - Use `effect()` for side effects
-- Use `resource()` or `rxResource()` for async data fetching
+- Use `resource()` for Promise-returning async, `rxResource()` for Observable-returning async
 - NEVER use `mutate()` on signals - use `update()` or `set()`
 
 ## Forms
@@ -26,7 +28,7 @@
 - NEVER store JWT in localStorage
 
 ## Styling
-- Use PrimeNG unstyled mode with Pass Through API
+- Use PrimeNG v21 styled theming (`@primeuix/themes` + `cssLayer`); attach `styles.css` classes via the Pass Through API
 - Map styles.css tokens to PrimeNG components via `pt` configuration
 - NEVER use hex values - ALWAYS use CSS custom properties
 - Use class bindings instead of `ngClass`
@@ -41,8 +43,8 @@
 ## Configuration & Environment
 - NEVER hardcode external service URLs (APIs, CDNs, fonts, etc.)
 - NEVER hardcode environment variable values in code
-- Use environment variables for all external service URLs
-- Reference environment variables via `import.meta.env['VAR_NAME']` or Angular's environment files
+- Use environment variables for all external service URLs (this app reads `NG_APP_*` from `import.meta.env`)
+- When reading `import.meta.env`, use a typed accessor — NEVER `as any` (see `app.config.ts` for the `any`-free pattern)
 - Add all required environment variables to `.env.example`
 
 ## Accessibility
@@ -58,11 +60,11 @@
 - Prefer type inference when obvious
 
 ## Testing
-- Focus on integration tests with Playwright
-- Test complete user flows (Login -> Create -> Delete)
-- Don't over-test simple components with unit tests
+- The project uses **Vitest** (`vitest` + `jsdom`) — run with `npm test`. Playwright is NOT installed.
+- Write focused unit/component tests for logic and user flows (Login -> Create -> Delete)
+- Don't over-test trivial components
 
 ## Performance
-- Signals automatically handle change detection
+- Signals drive change detection in this zoneless app — keep state in signals
 - Use `@defer` for lazy loading
 - Use `NgOptimizedImage` for images

@@ -1,7 +1,7 @@
 import { Injectable, signal, inject, PLATFORM_ID } from '@angular/core';
 import { Router } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { ApiConfiguration } from '../../../api/api-configuration';
 import { AuthService as GeneratedAuthService } from '../../../api/services/auth.service';
@@ -30,39 +30,9 @@ export class AuthFeatureService {
   token = this.tokenStorage.accessToken;
 
   constructor() {
-    this.loadAuthState();
+    // Tokens live in memory only (see TokenStorageService) — there is nothing to
+    // rehydrate from storage on construction. A page reload starts unauthenticated.
     this._isInitialized.set(true);
-  }
-
-  public loadAuthState(): void {
-    if (!isPlatformBrowser(this.platformId)) {
-      return;
-    }
-
-    const storedAccessToken = localStorage.getItem('access_token');
-    const storedUser = localStorage.getItem('user');
-
-    if (storedAccessToken) {
-      this.tokenStorage.setAccessToken(storedAccessToken);
-      // Only mark as authenticated if token is not expired
-      if (!this.isTokenExpired(storedAccessToken)) {
-        this._isAuthenticated.set(true);
-        if (storedUser) {
-          this._currentUser.set(JSON.parse(storedUser) as UserResponse);
-        }
-      }
-    }
-  }
-
-  private isTokenExpired(token: string): boolean {
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const exp = payload?.exp;
-      if (!exp) return false; // no expiry claim, treat as valid
-      return Date.now() >= exp * 1000;
-    } catch {
-      return true; // malformed token = expired
-    }
   }
 
   async login(credentials: LoginDto, returnUrl?: string): Promise<{
@@ -96,13 +66,8 @@ export class AuthFeatureService {
       throw new Error('Login response did not contain accessToken');
     }
 
-    if (isPlatformBrowser(this.platformId)) {
-      localStorage.setItem('refresh_token', loginResponse.refreshToken);
-      localStorage.setItem('access_token', loginResponse.accessToken);
-      localStorage.setItem('is_authenticated', 'true');
-    }
-
     this.tokenStorage.setAccessToken(loginResponse.accessToken);
+    this.tokenStorage.setRefreshToken(loginResponse.refreshToken);
     this._isAuthenticated.set(true);
 
     // Populate currentUser before navigation so authGuard sees it immediately (important in zoneless + signals)
@@ -140,13 +105,8 @@ export class AuthFeatureService {
       throw new Error('2FA verification did not return accessToken');
     }
 
-    if (isPlatformBrowser(this.platformId)) {
-      localStorage.setItem('refresh_token', response.refreshToken);
-      localStorage.setItem('access_token', response.accessToken);
-      localStorage.setItem('is_authenticated', 'true');
-    }
-
     this.tokenStorage.setAccessToken(response.accessToken);
+    this.tokenStorage.setRefreshToken(response.refreshToken);
     this._isAuthenticated.set(true);
 
     // Populate currentUser BEFORE navigation (critical for authGuard + zoneless signals)
@@ -209,13 +169,8 @@ export class AuthFeatureService {
       throw new Error('OTP verification did not return accessToken');
     }
 
-    if (isPlatformBrowser(this.platformId)) {
-      localStorage.setItem('refresh_token', response.refreshToken);
-      localStorage.setItem('access_token', response.accessToken);
-      localStorage.setItem('is_authenticated', 'true');
-    }
-
     this.tokenStorage.setAccessToken(response.accessToken);
+    this.tokenStorage.setRefreshToken(response.refreshToken);
     this._isAuthenticated.set(true);
 
     // Populate currentUser before caller decides to navigate (zoneless + authGuard safety)
@@ -242,13 +197,8 @@ export class AuthFeatureService {
       throw new Error('TOTP login did not return accessToken');
     }
 
-    if (isPlatformBrowser(this.platformId)) {
-      localStorage.setItem('refresh_token', response.refreshToken);
-      localStorage.setItem('access_token', response.accessToken);
-      localStorage.setItem('is_authenticated', 'true');
-    }
-
     this.tokenStorage.setAccessToken(response.accessToken);
+    this.tokenStorage.setRefreshToken(response.refreshToken);
     this._isAuthenticated.set(true);
 
     // Populate currentUser before caller decides to navigate (zoneless + authGuard safety)
@@ -265,14 +215,7 @@ export class AuthFeatureService {
     } finally {
       this._isAuthenticated.set(false);
       this._currentUser.set(null);
-      this.tokenStorage.setAccessToken(null);
-
-      if (isPlatformBrowser(this.platformId)) {
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('is_authenticated');
-        localStorage.removeItem('user');
-      }
+      this.tokenStorage.clear();
 
       const extras = returnUrl ? { queryParams: { returnUrl } } : undefined;
       await this.router.navigate(['/login'], extras);
@@ -288,23 +231,16 @@ export class AuthFeatureService {
 
       this._currentUser.set(user);
       this._isAuthenticated.set(true);
-
-      if (isPlatformBrowser(this.platformId)) {
-        localStorage.setItem('user', JSON.stringify(user));
-        localStorage.setItem('is_authenticated', 'true');
-      }
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Don't auto-logout here — caller (authGuard) will try refreshToken first.
-      // logout() wipes refresh_token from localStorage, making refresh impossible.
+      // logout() clears the in-memory refresh token, making refresh impossible.
       throw err;
     }
   }
 
   async refreshToken(): Promise<void> {
     try {
-      const refreshToken = isPlatformBrowser(this.platformId)
-        ? localStorage.getItem('refresh_token')
-        : null;
+      const refreshToken = this.tokenStorage.getRefreshToken();
 
       if (!refreshToken) {
         throw new Error('No refresh token available');
@@ -322,14 +258,12 @@ export class AuthFeatureService {
       );
 
       if (refreshResponse?.accessToken) {
-        if (isPlatformBrowser(this.platformId)) {
-          localStorage.setItem('refresh_token', refreshResponse.refreshToken);
-        }
         this.tokenStorage.setAccessToken(refreshResponse.accessToken);
+        this.tokenStorage.setRefreshToken(refreshResponse.refreshToken);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Only logout on 401 Unauthorized. Network/server errors should not wipe session.
-      if (err?.status === 401) {
+      if (err instanceof HttpErrorResponse && err.status === 401) {
         await this.logout();
       }
       throw err;

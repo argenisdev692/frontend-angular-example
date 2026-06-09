@@ -4,190 +4,174 @@ trigger: always_on
 
 # OWASP Frontend Security Baseline — Angular 21 (2026)
 
-> **Authority**: SINGLE SOURCE OF TRUTH for all frontend security decisions in Angular projects.
+> **Authority**: SINGLE SOURCE OF TRUTH for all frontend security decisions in this project.
 > **Sources**: OWASP Top 10:2025 (Web), OWASP ASVS v4.0.3, OWASP Secure Headers Project.
 > **Scope**: Browser-side security, CSP, auth flows, XSS prevention, CSRF, secrets management, dependency security.
-> **Remember**: The frontend is NOT a security boundary — the real enforcement is on the API server. These rules minimize attack surface and prevent client-side exploitation.
+> **Remember**: The frontend is NOT a security boundary — real enforcement is on the API server. These rules minimize attack surface and prevent client-side exploitation.
+>
+> **Project reality**: this app uses an **in-memory JWT** model (`TokenStorageService` holds the access token in a signal — never `localStorage`/`sessionStorage`), attached by a **functional** interceptor (`authInterceptor`) with silent refresh on 401. Examples below reflect that model.
 
 ---
 
 ## 1. Cross-Site Scripting (XSS) Prevention
 
-- **Angular auto-escapes by default** — NEVER bypass with `DomSanitizer.bypassSecurityTrust` unless absolutely necessary.
-- If bypassing security is required, ALWAYS sanitize with DOMPurify first.
+- **Angular auto-escapes by default** — NEVER bypass with `DomSanitizer.bypassSecurityTrust*` unless absolutely necessary.
+- If bypassing is unavoidable, ALWAYS sanitize with DOMPurify first.
 - NEVER render user input inside `[innerHTML]` without sanitization.
 - NEVER use `document.write()`, `innerHTML`, or `outerHTML` with user-controlled data.
-- NEVER construct URLs from user input without validation — use `URL` constructor + allowlist.
-- Use Angular's built-in sanitization via `DomSanitizer`.
+- NEVER construct URLs from user input without validation — use the `URL` constructor + allowlist.
 
 ```typescript
-// ✅ CORRECT — sanitized HTML
+// ✅ CORRECT — inject() + sanitized HTML (dompurify ^3 is installed)
+import { Component, inject } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import DOMPurify from 'dompurify';
 
-constructor(private sanitizer: DomSanitizer) {}
+@Component({ /* ... */ })
+export class ArticleComponent {
+  private sanitizer = inject(DomSanitizer);
 
-getSafeHtml(html: string) {
-  const clean = DOMPurify.sanitize(html);
-  return this.sanitizer.bypassSecurityTrustHtml(clean);
+  getSafeHtml(html: string) {
+    const clean = DOMPurify.sanitize(html);
+    return this.sanitizer.bypassSecurityTrustHtml(clean);
+  }
 }
 
-// ❌ FORBIDDEN — raw user HTML
-this.sanitizer.bypassSecurityTrustHtml(userInput);
+// ❌ FORBIDDEN — raw user HTML, and ❌ constructor injection
+// this.sanitizer.bypassSecurityTrustHtml(userInput);
 ```
 
 ---
 
-## 2. Content Security Policy (CSP)
+## 2. Content Security Policy (CSP) & Security Headers
 
-EVERY production Angular app MUST have a Content Security Policy. Configure in `angular.json` or via interceptors:
+**CSP and security headers are RESPONSE headers — they MUST be set by the server / edge / SSR layer, NEVER by an Angular HTTP interceptor.** An interceptor sets *request* headers, which has zero security effect for CSP/HSTS/X-Frame-Options.
+
+Set them where responses are produced:
+
+- **SSR (this app uses `@angular/ssr` + Express)** — set headers on the Express response:
 
 ```typescript
-// security.interceptor.ts
-import { Injectable } from '@angular/core';
-import { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
-
-@Injectable()
-export class SecurityHeadersInterceptor implements HttpInterceptor {
-  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    const secureReq = req.clone({
-      setHeaders: {
-        'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https:; connect-src 'self' wss:; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests;",
-        'X-Content-Type-Options': 'nosniff',
-        'X-Frame-Options': 'DENY',
-        'X-XSS-Protection': '0',
-        'Referrer-Policy': 'strict-origin-when-cross-origin',
-        'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()',
-        'Strict-Transport-Security': 'max-age=63072000; includeSubDomains; preload'
-      }
-    });
-    return next.handle(secureReq);
-  }
-}
+// server.ts (Express) — applies to the served HTML document
+app.use((_req, res, next) => {
+  res.setHeader('Content-Security-Policy',
+    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; " +
+    "img-src 'self' blob: data: https:; connect-src 'self' https: wss:; " +
+    "frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests;");
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+  res.setHeader('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
+  next();
+});
 ```
+
+- **Static/CDN hosting** — configure the same headers at the edge (host config, `_headers`, reverse proxy).
+- Avoid `'unsafe-inline'` in `script-src`. Angular's build emits hashable/externalized scripts; use nonces/hashes if inline is unavoidable.
+- Do NOT add the obsolete `X-XSS-Protection` header (deprecated; a strong CSP replaces it).
 
 ---
 
 ## 3. Authentication & Session Security
 
-- Use **HttpOnly, Secure, SameSite=Lax** cookies for tokens — NEVER in `localStorage` or `sessionStorage`.
-- NEVER store JWT in localStorage — use HttpOnly cookies or in-memory service singleton.
-- Session validation happens in functional interceptors — attach tokens automatically.
-- NEVER expose access tokens to templates — read via services only.
-- NEVER trust client-side permission checks as security — they are UX hints only. The API enforces real authorization.
-- Password reset tokens MUST be single-use and time-limited.
-- ALWAYS return HTTP 200 for password reset requests regardless of email existence — prevent user enumeration.
+Two acceptable models — pick one and be consistent. **This project uses Model A.**
+
+- **Model A — In-memory access token (current):** store the access token in a `signal`-backed service (`TokenStorageService`), attach it via the functional interceptor, refresh on 401. Never persist it to `localStorage`/`sessionStorage`. Refresh token should live in an **HttpOnly, Secure, SameSite=Lax** cookie set by the backend.
+- **Model B — Pure HttpOnly cookies:** backend sets HttpOnly cookies; the browser sends them automatically and the frontend never reads or attaches tokens manually.
+
+Rules:
+- NEVER store any JWT in `localStorage`/`sessionStorage`.
+- NEVER expose tokens to templates — read them only inside services/interceptors.
+- NEVER trust client-side permission checks as security — they are UX hints; the API enforces authorization.
+- Password reset tokens MUST be single-use and time-limited (backend), and the backend MUST return 200 regardless of email existence (prevents user enumeration).
 
 ```typescript
-// ✅ CORRECT — HttpOnly cookie via interceptor
-export function authInterceptor(): HttpInterceptorFn {
-  return (req, next) => {
-    const token = inject(AuthService).getToken();
-    if (token) {
-      req = req.clone({
-        setHeaders: { Authorization: `Bearer ${token}` }
-      });
-    }
-    return next(req);
-  };
-}
+// ✅ CORRECT — functional interceptor, in-memory token, no `any`
+import { HttpInterceptorFn } from '@angular/common/http';
+import { inject } from '@angular/core';
+import { TokenStorageService } from '...';
 
-// ❌ FORBIDDEN — localStorage token storage
-localStorage.setItem('token', response.accessToken);
+export const authInterceptor: HttpInterceptorFn = (req, next) => {
+  const token = inject(TokenStorageService).getAccessToken();
+  const outgoing = token
+    ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
+    : req;
+  return next(outgoing);
+};
+
+// ❌ FORBIDDEN — class-based interceptor, `any`, and localStorage tokens
+// localStorage.setItem('token', response.accessToken);
 ```
 
 ---
 
 ## 4. Cross-Site Request Forgery (CSRF)
 
-- Use Angular's built-in CSRF protection via `HttpClientXsrfModule`.
-- Configure CSRF token in `app.config.ts` with `withCsrfProtection()`.
-- Set cookies with `SameSite=Lax` (or `Strict` for sensitive actions) — NEVER `SameSite=None` without necessity.
-- NEVER use GET requests for state mutations — always POST/PATCH/PUT/DELETE.
+- For cookie-based auth, enable Angular's built-in protection with `withXsrfConfiguration()` in `provideHttpClient`.
+- Backend sets a readable `XSRF-TOKEN` cookie; Angular echoes it in `X-XSRF-TOKEN`.
+- Use `SameSite=Lax` (or `Strict` for sensitive actions) — avoid `SameSite=None` unless cross-site is required.
+- NEVER use GET for state mutations — always POST/PATCH/PUT/DELETE.
 
 ```typescript
 // app.config.ts
 provideHttpClient(
+  withFetch(),
   withInterceptors([authInterceptor]),
-  withCsrfProtection({
-    cookieName: 'XSRF-TOKEN',
-    headerName: 'X-XSRF-TOKEN'
-  })
+  withXsrfConfiguration({ cookieName: 'XSRF-TOKEN', headerName: 'X-XSRF-TOKEN' })
 )
 ```
+
+> Note: a Bearer-token (in-memory) request model is not vulnerable to classic cookie-CSRF, since the token isn't sent automatically. Enable XSRF config only if/when cookie auth is used.
 
 ---
 
 ## 5. Environment Variables & Secrets
 
-- **Server-only secrets** (DB URLs, API keys): use environment files — accessible ONLY in build time.
-- **Client-exposed values** (API base URL): use standard env vars — these are embedded in the client bundle.
-- Validate ALL environment variables at startup with Zod in `env.ts`.
-- NEVER commit `.env.local` — add to `.gitignore`. Provide `.env.example` with placeholder values.
-
-```typescript
-// env.ts
-import { z } from 'zod';
-
-const envSchema = z.object({
-  API_URL: z.string().url(),
-  WS_URL: z.string().url(),
-});
-
-export const env = envSchema.parse({
-  API_URL: environment.apiUrl,
-  WS_URL: environment.wsUrl,
-});
-```
+- **Server-only secrets** (DB URLs, private API keys): never reach the client bundle.
+- **Client-exposed values** (API base URL): build-time env, embedded in the bundle — assume public.
+- This app reads `NG_APP_API_BASE_URL` from `import.meta.env` with a typed, `any`-free accessor (see `app.config.ts`); validate it at startup.
+- NEVER commit `.env.local`. Provide `.env.example` with placeholders. `.env*` is denied to tooling in `settings.json`.
 
 ---
 
 ## 6. Open Redirect Prevention
 
 - NEVER redirect to user-supplied URLs without validation.
-- Use Angular Router with hardcoded paths — NEVER with user input directly.
-- If dynamic redirect is needed, validate against an allowlist of internal paths.
+- Use Angular Router with hardcoded paths. The stored `intended_url` (post-login redirect) MUST be validated against an internal-path allowlist before navigating.
 
 ```typescript
-// ✅ CORRECT — allowlisted redirect
-const ALLOWED_REDIRECTS = new Set(['/dashboard', '/profile', '/settings']);
+const ALLOWED = new Set(['/dashboard', '/profile', '/settings']);
 const target = redirectUrl ?? '/dashboard';
-const safeTarget = ALLOWED_REDIRECTS.has(target) ? target : '/dashboard';
-this.router.navigate([safeTarget]);
-
-// ❌ FORBIDDEN — open redirect
-this.router.navigate([userProvidedUrl]);
+this.router.navigateByUrl(ALLOWED.has(target) ? target : '/dashboard');
 ```
 
 ---
 
 ## 7. Dependency Security
 
-- Pin all dependencies in `package.json` — use exact versions or lockfile.
-- Run `npm audit` in CI on every PR — block merges on critical/high vulnerabilities.
-- NEVER install packages from untrusted sources or with `--ignore-scripts` in production.
-- Keep Angular >= 21.0 — stay updated with latest security patches.
-- Review changelogs before upgrading major versions.
+- Use a committed lockfile (`package-lock.json`) — npm only (no pnpm/yarn).
+- Run `npm audit` in CI on every PR; block on critical/high.
+- Keep Angular and PrimeNG on the latest patched versions (Angular >= 21).
+- Review changelogs before major upgrades.
 
 ---
 
 ## 8. Information Disclosure Prevention
 
 - NEVER expose stack traces, internal error messages, or server paths to the client.
-- Global error handler MUST show user-friendly messages — NEVER `error.stack` or `error.message` from server.
-- NEVER log sensitive data (`tokens`, `passwords`, `cookies`, `headers`) in browser console.
-- Remove `X-Powered-By` header — configure in interceptor.
+- A global `ErrorHandler` shows user-friendly messages; it must not surface `error.stack`/server `error.message`.
+- NEVER log tokens, passwords, cookies, or headers to the console. NEVER use `console.log` in production code.
 
 ```typescript
-// global-error-handler.ts
+import { ErrorHandler, Injectable, inject } from '@angular/core';
+
 @Injectable()
 export class GlobalErrorHandler implements ErrorHandler {
-  handleError(error: Error): void {
-    // ✅ CORRECT — generic message to user
-    this.notificationService.showError('Something went wrong');
-    
-    // ❌ FORBIDDEN — leaking server info
-    console.error(error.stack);
+  private notify = inject(NotificationService);
+  handleError(_error: unknown): void {
+    this.notify.showError('Something went wrong'); // generic to user
+    // report `_error` to a monitoring service here, not the console
   }
 }
 ```
@@ -196,82 +180,62 @@ export class GlobalErrorHandler implements ErrorHandler {
 
 ## 9. Secure Data Fetching
 
-- Functional interceptors MUST attach auth tokens automatically — NEVER pass tokens manually.
-- NEVER fetch from arbitrary URLs constructed from user input — SSRF via the browser.
-- Validate ALL API response shapes with Zod before using data — don't trust the API blindly.
-- Set timeouts on all HTTP requests — NEVER allow infinite waits.
-- NEVER log request/response bodies containing sensitive data.
-
-```typescript
-// service with validation
-@Injectable({ providedIn: 'root' })
-export class ProductService {
-  private http = inject(HttpClient);
-  
-  getAll(): Observable<Product[]> {
-    return this.http.get<Product[]>('/api/products').pipe(
-      map(data => productSchema.array().parse(data))
-    );
-  }
-}
-```
+- The functional interceptor attaches auth automatically — NEVER pass tokens manually at call sites.
+- NEVER fetch from URLs built from raw user input (browser-side SSRF).
+- Types from `ng-openapi-gen` give compile-time safety but NOT runtime guarantees. For data crossing trust boundaries (auth responses, anything rendered as HTML, money/permissions), validate the runtime shape with **Zod** (`zod ^4` is installed) before use.
+- Set request timeouts — NEVER allow infinite waits. NEVER log bodies with sensitive data.
 
 ---
 
 ## 10. Image & File Upload Security
 
-- Validate file type, size, and dimensions on the client AND server.
-- Use `NgOptimizedImage` for static images — NEVER arbitrary image loading.
-- Set allowlist for image domains in CSP.
-- Validate file uploads before sending to server.
+- Validate file type, size, and dimensions on client AND server.
+- Use `NgOptimizedImage` for static images.
+- Add allowed image domains to the CSP `img-src`.
 
 ---
 
 ## 11. Rate Limiting & Abuse Prevention
 
-- Rate limit auth endpoints (login, register) — implement on the API server, but also add client-side debounce.
-- Debounce search inputs to avoid flooding the API.
-- Disable submit buttons during `isLoading` state — prevent double submissions.
-- Use confirmation dialogs before every destructive action (delete, suspend, revoke).
+- Rate-limit auth endpoints on the API; add client-side debounce on login/search.
+- Disable submit buttons during the `isLoading` signal — prevent double submission.
+- Confirmation dialogs before destructive actions (delete, suspend, revoke).
 
 ---
 
 ## 12. WebSocket Security
 
-- Authenticate WebSocket connections during handshake — NEVER allow unauthenticated WS connections.
-- Validate all incoming WS event payloads — NEVER trust data from the server blindly.
-- Use `wss://` (TLS) in production — NEVER plain `ws://`.
-- Reconnect with exponential backoff — NEVER infinite immediate retries.
+- Authenticate during the handshake — no unauthenticated WS.
+- Validate all incoming WS payloads — don't trust server data blindly.
+- Use `wss://` in production; reconnect with exponential backoff.
 
 ---
 
-## 13. Functional Interceptors Security
+## 13. Functional Interceptors (Security)
 
-- Functional interceptors handle auth automatically.
-- ALWAYS validate tokens in interceptor before attaching.
-- NEVER expose internal error details in interceptor responses.
-- Handle CSRF tokens via `withCsrfProtection()`.
+- Use `HttpInterceptorFn` — never class-based `HttpInterceptor`.
+- Skip token attachment for non-API and auth endpoints (login/refresh/logout) as `authInterceptor` already does.
+- On 401, refresh once and retry; on refresh failure, store a validated `intended_url` and log out.
+- NEVER leak internal error details from the interceptor.
 
 ---
 
 ## 14. Third-Party Script Security
 
-- Load third-party scripts via Angular's built-in mechanisms — NEVER inline `<script>` tags.
-- Pin script versions — NEVER load `latest` from CDN.
-- Add third-party domains to CSP `script-src` explicitly — NEVER use `'unsafe-inline'` in production.
-- Audit third-party scripts regularly for supply chain attacks.
+- Load third-party scripts via Angular mechanisms — no inline `<script>`.
+- Pin versions — never `latest` from a CDN.
+- Add third-party domains to CSP `script-src` explicitly.
 
 ---
 
 ## Repository Enforcement Rules
 
-- Always validate inputs with Zod — on Reactive Forms AND API calls.
-- Always set CSP + security headers via interceptors.
-- Always store tokens in httpOnly cookies — NEVER localStorage.
-- Always sanitize before `[innerHTML]` — use DOMPurify + DomSanitizer.
-- Always validate env vars at startup with Zod.
-- Always redirect with allowlisted paths — NEVER user-supplied URLs directly.
-- Always keep Angular updated to latest version.
-- Always verify auth in interceptors — automatic token attachment.
-- Always use `NgOptimizedImage` for images.
-- Always show user-friendly errors — NEVER expose stack traces or server internals.
+- Set CSP + security headers at the **server/SSR/edge** layer — NEVER via an HTTP request interceptor.
+- Keep access tokens **in memory** (signal service) — NEVER `localStorage`/`sessionStorage`.
+- Use **functional** interceptors (`HttpInterceptorFn`) and `inject()` — never class-based interceptors or constructor injection.
+- NEVER use `any` / `@ts-ignore` / `as any` — use `unknown` and narrow.
+- Sanitize with DOMPurify (`dompurify ^3`, installed) before any `[innerHTML]`.
+- Validate runtime shapes for trust-boundary data with Zod (`zod ^4`, installed) even with generated types.
+- Validate redirects against an internal allowlist.
+- Show user-friendly errors; never expose stack traces or server internals; no `console.log` in production.
+- Use `NgOptimizedImage` for static images; keep Angular/PrimeNG patched.

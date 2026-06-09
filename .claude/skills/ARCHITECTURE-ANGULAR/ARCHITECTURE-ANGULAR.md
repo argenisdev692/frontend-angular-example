@@ -9,23 +9,31 @@ trigger: always_on
 
 ## Directory Structure
 
+All application code lives under `src/app/` (Angular CLI default):
+
 ```
 src/
-├── app/              # Angular routing and component orchestration
-├── core/             # Singleton services, interceptors, guards
-├── features/         # Feature modules (business logic)
-├── shared/           # Shared UI components, pipes, directives
-├── models/           # Global TypeScript interfaces/types
-├── utils/            # Shared utilities, helpers
-├── config/           # Angular configuration (app.config.ts, routes)
-├── assets/           # Static assets (images, fonts)
-└── styles.css        # Global styles with design tokens
+├── app/
+│   ├── api/               # ng-openapi-gen output: services, models, fn, interceptors
+│   ├── features/          # Feature modules (business logic) — e.g. auth/
+│   ├── shared/            # Shared UI components, pipes, directives
+│   ├── components/        # App-level shared components
+│   ├── pages/             # Routed page components
+│   ├── app.config.ts      # Providers: PrimeNG theme, HTTP, router, zoneless CD
+│   ├── app.routes.ts      # Root routing
+│   └── app.ts             # Root component
+├── assets/                # Static assets (images, fonts)
+├── server.ts              # Express + @angular/ssr (set security headers here)
+└── styles.css             # Global styles with design tokens
 ```
 
+> Optional growth: introduce `core/` (singletons/guards), `models/`, `utils/` under `src/app/` when needed. Generated API code stays in `src/app/api/` — do not edit it by hand.
+
 ## §1: App Directory (`src/app/`)
-- **Purpose:** Angular routing and component orchestration
+- **Purpose:** root of all application code — routing and component orchestration
 - **Rules:**
   - `app/` is the sole orchestrator - imports from everywhere
+  - `app.config.ts` registers providers, including `provideZonelessChangeDetection()`
   - Route configuration in `app.routes.ts`
   - Lazy load features via `loadComponent` or standalone imports
   - Keep route components focused on composition
@@ -33,11 +41,11 @@ src/
   - Use `@defer` for lazy loading heavy components
   - Layout components for shared UI (sidebar, header)
 
-## §2: Core Directory (`src/core/`)
+## §2: Core Directory (`src/app/core/`, optional)
 - **Purpose:** Singleton services and application-wide concerns
 - **Structure:**
   ```
-  src/core/
+  src/app/core/
   ├── interceptors/     # Functional HTTP interceptors
   ├── guards/           # Route guards (canActivate, canLoad)
   ├── services/         # Singleton services (auth, theme, error handling)
@@ -50,11 +58,11 @@ src/
   - Authentication service (HttpOnly cookies or in-memory)
   - Theme service for dark/light mode
 
-## §3: Features Directory (`src/features/`)
+## §3: Features Directory (`src/app/features/`)
 - **Purpose:** Feature modules with business logic
 - **Structure:**
   ```
-  src/features/{feature-name}/
+  src/app/features/{feature-name}/
   ├── components/       # Feature-specific components
   ├── services/         # Feature-specific services
   ├── models/           # Feature-specific interfaces/types
@@ -67,23 +75,23 @@ src/
   - Lazy load feature routes
   - No circular dependencies between features
 
-## §4: Shared Directory (`src/shared/`)
+## §4: Shared Directory (`src/app/shared/`)
 - **Purpose:** Reusable UI components, pipes, directives
 - **Structure:**
   ```
-  src/shared/
+  src/app/shared/
   ├── components/       # Reusable UI components
   ├── pipes/            # Custom pipes
   ├── directives/       # Custom directives
-  └── ui/               # PrimeNG unstyled wrappers
+  └── ui/               # PrimeNG themed wrappers
   ```
 - **Rules:**
-  - All components are standalone
-  - Use PrimeNG unstyled with Pass Through
+  - All components are standalone (never write `standalone: true`)
+  - Use PrimeNG v21 styled theming with Pass Through
   - Map styles.css tokens via pt configuration
   - Components should be framework-agnostic where possible
 
-## §5: Models Directory (`src/models/`)
+## §5: Models Directory (`src/app/models/`, optional)
 - **Purpose:** Global TypeScript interfaces and types
 - **Rules:**
   - Shared domain models across features
@@ -91,7 +99,7 @@ src/
   - Export interfaces and types
   - Keep models simple and focused
 
-## §6: Utils Directory (`src/utils/`)
+## §6: Utils Directory (`src/app/utils/`, optional)
 - **Purpose:** Shared utilities and helper functions
 - **Rules:**
   - Pure functions where possible
@@ -99,34 +107,32 @@ src/
   - Export named functions
   - Unit testable
 
-## §7: Config Directory (`src/config/`)
-- **Purpose:** Angular configuration
+## §7: Config Files (`src/app/`)
+- **Purpose:** Angular configuration (files, not a separate directory)
 - **Files:**
-  - `app.config.ts` - Application configuration (PrimeNG, providers)
-  - `app.routes.ts` - Root routing configuration
+  - `app.config.ts` - Application providers (PrimeNG theme, HTTP, router, zoneless CD)
+  - `app.config.server.ts` - SSR-specific providers
+  - `app.routes.ts` / `app.routes.server.ts` - routing
 - **Rules:**
-  - Configure PrimeNG unstyled mode
-  - Configure functional interceptors
-  - Configure providers
+  - Configure PrimeNG v21 styled theming (`@primeuix/themes` + `cssLayer`)
+  - Configure functional interceptors via `withInterceptors([...])`
   - Keep configuration minimal
 
 ## Component Organization
 
 ### Standalone Component Structure
 ```typescript
-// src/features/auth/components/login/login.component.ts
-import { Component, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+// src/app/features/auth/components/login/login.component.ts
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
-  standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ButtonModule],
-  template: `...`,
-  styles: []
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [ReactiveFormsModule, ButtonModule], // no CommonModule — control flow is built in
+  template: `...`
 })
 export class LoginComponent {
   private authService = inject(AuthService);
@@ -137,10 +143,9 @@ export class LoginComponent {
 
 ### Service Organization
 ```typescript
-// src/features/auth/services/auth.service.ts
-import { Injectable } from '@angular/core';
+// src/app/features/auth/services/auth.service.ts
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { inject } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -173,7 +178,7 @@ export const routes: Routes = [
 
 ### Feature Routes
 ```typescript
-// src/features/auth/auth.routes.ts
+// src/app/features/auth/auth.routes.ts
 import { Routes } from '@angular/router';
 import { LoginComponent } from './components/login/login.component';
 import { RegisterComponent } from './components/register/register.component';
@@ -187,7 +192,8 @@ export const AUTH_ROUTES: Routes = [
 ## Best Practices
 
 ### Component Rules
-- All components are standalone (no `standalone: true` needed in v21)
+- All components are standalone — NEVER write `standalone: true` (v21 default)
+- Don't import `CommonModule` for control flow — `@if`/`@for`/`@switch` are built in
 - Set `changeDetection: ChangeDetectionStrategy.OnPush` in @Component decorator
 - Use `input()` and `output()` functions instead of decorators
 - Use signals for state management
@@ -216,8 +222,8 @@ export const AUTH_ROUTES: Routes = [
 ### Import Organization
 ```typescript
 // 1. Angular imports
-import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ReactiveFormsModule } from '@angular/forms';
 
 // 2. Third-party imports
 import { ButtonModule } from 'primeng/button';

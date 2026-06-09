@@ -10,6 +10,16 @@ import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/
 import { provideApiConfiguration } from './api/api-configuration';
 import { authInterceptor } from './api/interceptors/auth.interceptor';
 
+// Typed, `any`-free access to build-time env (NG_APP_* are embedded in the client bundle)
+const buildEnv =
+  typeof import.meta !== 'undefined'
+    ? (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env
+    : undefined;
+
+const apiBaseUrl =
+  buildEnv?.['NG_APP_API_BASE_URL'] ??
+  'https://backend-aquashield-restoration-production.up.railway.app';
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
@@ -27,6 +37,6 @@ export const appConfig: ApplicationConfig = {
       }
     }),
     provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
-    provideApiConfiguration((typeof import.meta !== 'undefined' && (import.meta as any).env?.['NG_APP_API_BASE_URL']) || 'https://backend-aquashield-restoration-production.up.railway.app')
+    provideApiConfiguration(apiBaseUrl)
   ]
 };

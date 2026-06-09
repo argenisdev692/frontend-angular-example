@@ -26,12 +26,17 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     ? req.url.startsWith(rootUrl)
     : req.url.includes('backend-aquashield-restoration-production.up.railway.app');
 
-  // Don't attach expired access token to auth endpoints — backend may reject it
+  // Pre-authentication endpoints: no access token exists yet (or it must not be sent),
+  // so we neither attach a Bearer token nor run the 401 refresh-retry on them.
+  // NOTE: /api/v1/auth/me is a POST-authentication endpoint — it REQUIRES the Bearer
+  // token and must NOT be listed here (otherwise /me always 401s and the authGuard
+  // bounces the user straight back to /login after a successful sign-in).
+  // /logout stays excluded on purpose: it tolerates a missing/expired token and keeping
+  // it out of the refresh-retry path avoids a logout recursion when both tokens are dead.
   const isAuthEndpoint =
     req.url.endsWith('/api/v1/auth/login') ||
     req.url.endsWith('/api/v1/auth/refresh') ||
     req.url.endsWith('/api/v1/auth/logout') ||
-    req.url.endsWith('/api/v1/auth/me') ||
     req.url.endsWith('/api/v1/auth/otp/send') ||
     req.url.endsWith('/api/v1/auth/otp/verify') ||
     req.url.endsWith('/api/v1/auth/two-factor/verify') ||

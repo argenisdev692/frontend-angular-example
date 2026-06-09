@@ -42,10 +42,11 @@ Audit the Angular codebase for [specific area or full audit]
 - [ ] Rate limiting for login attempts
 
 ### Styling
-- [ ] PrimeNG unstyled mode enabled
-- [ ] Pass Through API configured
+- [ ] PrimeNG v21 styled theming (`@primeuix/themes` + Aura preset)
+- [ ] `cssLayer` enabled so Tailwind v4 overrides PrimeNG
+- [ ] Pass Through API used to attach styles.css classes
 - [ ] styles.css tokens used (no hex values)
-- [ ] Dark mode with data-theme selector
+- [ ] Dark mode via `.dark`; light via `[data-theme="light"]`; `darkModeSelector: '.dark'`
 - [ ] Class bindings instead of ngClass
 - [ ] Style bindings instead of ngStyle
 
@@ -82,9 +83,9 @@ Audit the Angular codebase for [specific area or full audit]
 - [ ] AXE checks pass
 
 ### Testing
-- [ ] Integration tests with Playwright
+- [ ] Unit/component tests with Vitest (`npm test`) — Playwright is NOT used
 - [ ] User flow tests (Login -> Create -> Delete)
-- [ ] No over-testing of simple components
+- [ ] No over-testing of trivial components
 
 ## Report Format
 ```
@@ -121,7 +122,8 @@ Audit the Angular codebase for [specific area or full audit]
 
 ## Automated Checks
 ```bash
-ng lint
-ng test
-ng build --prod
+npx tsc --noEmit     # type-check (strict)
+npm test             # Vitest
+npm run build        # production build (ng build)
+npm audit            # dependency vulnerabilities
 ```
