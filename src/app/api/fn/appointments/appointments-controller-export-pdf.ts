@@ -27,12 +27,12 @@ export interface AppointmentsControllerExport$Pdf$Params {
   onlyTrashed?: (boolean | 'true' | 'false');
 
 /**
- * Filter appointments created on or after this date (inclusive).
+ * Filter appointments created on or after this date (inclusive). Format: YYYY-MM-DD.
  */
   start_date?: string;
 
 /**
- * Filter appointments created on or before this date (inclusive).
+ * Filter appointments created on or before this date (inclusive). Format: YYYY-MM-DD.
  */
   end_date?: string;
 }

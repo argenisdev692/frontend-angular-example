@@ -10,7 +10,15 @@ import { RequestBuilder } from '../../request-builder';
 import { ActivityLogResponse } from '../../models/activity-log-response';
 
 export interface ActivityLogControllerFindAll$Params {
+
+/**
+ * Filter by date (inclusive end). Format: YYYY-MM-DD.
+ */
   end_date?: string;
+
+/**
+ * Filter by date (inclusive start). Format: YYYY-MM-DD.
+ */
   start_date?: string;
   resourceId?: string;
   action?: string;

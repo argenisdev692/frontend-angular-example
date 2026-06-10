@@ -12,12 +12,12 @@ import { BlogCategoryResponse } from '../../models/blog-category-response';
 export interface BlogCategoryControllerFindAll$Params {
 
 /**
- * Filter by createdAt <= end_date (inclusive).
+ * Filter by createdAt <= end_date (inclusive). Format: YYYY-MM-DD.
  */
   end_date?: string;
 
 /**
- * Filter by createdAt >= start_date (inclusive).
+ * Filter by createdAt >= start_date (inclusive). Format: YYYY-MM-DD.
  */
   start_date?: string;
 

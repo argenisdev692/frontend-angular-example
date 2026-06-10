@@ -23,12 +23,12 @@ export interface ContactSupportControllerExport$Pdf$Params {
   onlyTrashed?: (boolean | 'true' | 'false');
 
 /**
- * Filter by creation date (inclusive start).
+ * Filter by creation date (inclusive start). Format: YYYY-MM-DD.
  */
   start_date?: string;
 
 /**
- * Filter by creation date (inclusive end).
+ * Filter by creation date (inclusive end). Format: YYYY-MM-DD.
  */
   end_date?: string;
 }
