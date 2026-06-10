@@ -4,11 +4,18 @@ import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { ApiConfiguration } from '../../../api/api-configuration';
+import { joinApiUrl } from '../../../api/api-url';
 import { AuthService as GeneratedAuthService } from '../../../api/services/auth.service';
 import { LoginDto } from '../../../api/models';
 import { VerifyTwoFactorChallengeDto } from '../../../api/models/verify-two-factor-challenge-dto';
 import { UserResponse } from '../../../api/models/user-response';
 import { TokenStorageService } from './token-storage.service';
+import {
+  LoginResponse,
+  parseAuthTokens,
+  parseLoginResponse,
+  parseUserResponse,
+} from '../models/auth.schemas';
 
 @Injectable({ providedIn: 'root' })
 export class AuthFeatureService {
@@ -35,35 +42,19 @@ export class AuthFeatureService {
     this._isInitialized.set(true);
   }
 
-  async login(credentials: LoginDto, returnUrl?: string): Promise<{
-    accessToken?: string;
-    accessTokenExpiresAt?: string;
-    refreshToken?: string;
-    twoFactorRequired?: boolean;
-    mustChangePassword?: boolean;
-    passwordExpiresAt?: string | null;
-    returnUrl?: string;
-  }> {
-    const rootUrl = (this.config.rootUrl || '').replace(/\/$/, '');
-    const loginUrl = `${rootUrl}/api/v1/auth/login`;
+  async login(credentials: LoginDto, returnUrl?: string): Promise<LoginResponse & { returnUrl?: string }> {
+    const loginUrl = joinApiUrl(this.config.rootUrl, '/api/v1/auth/login');
 
-    const loginResponse = await firstValueFrom(
-      this.http.post<{
-        accessToken: string;
-        accessTokenExpiresAt: string;
-        refreshToken: string;
-        twoFactorRequired: boolean;
-        mustChangePassword: boolean;
-        passwordExpiresAt: string | null;
-      }>(loginUrl, credentials)
+    const loginResponse = parseLoginResponse(
+      await firstValueFrom(this.http.post<unknown>(loginUrl, credentials))
     );
 
     if (loginResponse.twoFactorRequired) {
       return loginResponse;
     }
 
-    if (!loginResponse?.accessToken) {
-      throw new Error('Login response did not contain accessToken');
+    if (!loginResponse?.accessToken || !loginResponse.refreshToken) {
+      throw new Error('Login response did not contain tokens');
     }
 
     this.tokenStorage.setAccessToken(loginResponse.accessToken);
@@ -90,20 +81,11 @@ export class AuthFeatureService {
   }
 
   async verifyTwoFactor(challenge: VerifyTwoFactorChallengeDto, returnUrl?: string): Promise<void> {
-    const rootUrl = (this.config.rootUrl || '').replace(/\/$/, '');
-    const url = `${rootUrl}/api/v1/auth/two-factor/verify`;
+    const url = joinApiUrl(this.config.rootUrl, '/api/v1/auth/two-factor/verify');
 
-    const response = await firstValueFrom(
-      this.http.post<{
-        accessToken: string;
-        accessTokenExpiresAt: string;
-        refreshToken: string;
-      }>(url, challenge)
+    const response = parseAuthTokens(
+      await firstValueFrom(this.http.post<unknown>(url, challenge))
     );
-
-    if (!response?.accessToken) {
-      throw new Error('2FA verification did not return accessToken');
-    }
 
     this.tokenStorage.setAccessToken(response.accessToken);
     this.tokenStorage.setRefreshToken(response.refreshToken);
@@ -122,21 +104,18 @@ export class AuthFeatureService {
   }
 
   googleSignIn(): void {
-    const rootUrl = (this.config.rootUrl || '').replace(/\/$/, '');
-    window.location.href = `${rootUrl}/api/v1/auth/google/redirect`;
+    window.location.href = joinApiUrl(this.config.rootUrl, '/api/v1/auth/google/redirect');
   }
 
   async forgotPassword(email: string): Promise<void> {
-    const rootUrl = (this.config.rootUrl || '').replace(/\/$/, '');
     await firstValueFrom(
-      this.http.post(`${rootUrl}/api/v1/auth/forgot-password`, { email })
+      this.http.post(joinApiUrl(this.config.rootUrl, '/api/v1/auth/forgot-password'), { email })
     );
   }
 
   async resetPassword(email: string, code: string, newPassword: string): Promise<void> {
-    const rootUrl = (this.config.rootUrl || '').replace(/\/$/, '');
     await firstValueFrom(
-      this.http.post(`${rootUrl}/api/v1/auth/reset-password`, { email, code, newPassword })
+      this.http.post(joinApiUrl(this.config.rootUrl, '/api/v1/auth/reset-password'), { email, code, newPassword })
     );
   }
 
@@ -145,9 +124,8 @@ export class AuthFeatureService {
    * Backend endpoint required: POST /api/v1/auth/otp/send
    */
   async sendEmailOtp(email: string): Promise<void> {
-    const rootUrl = (this.config.rootUrl || '').replace(/\/$/, '');
     await firstValueFrom(
-      this.http.post(`${rootUrl}/api/v1/auth/otp/send`, { email })
+      this.http.post(joinApiUrl(this.config.rootUrl, '/api/v1/auth/otp/send'), { email })
     );
   }
 
@@ -156,18 +134,11 @@ export class AuthFeatureService {
    * Backend endpoint required: POST /api/v1/auth/otp/verify
    */
   async verifyEmailOtp(email: string, code: string, returnUrl?: string): Promise<void> {
-    const rootUrl = (this.config.rootUrl || '').replace(/\/$/, '');
-    const response = await firstValueFrom(
-      this.http.post<{
-        accessToken: string;
-        accessTokenExpiresAt: string;
-        refreshToken: string;
-      }>(`${rootUrl}/api/v1/auth/otp/verify`, { email, code })
+    const response = parseAuthTokens(
+      await firstValueFrom(
+        this.http.post<unknown>(joinApiUrl(this.config.rootUrl, '/api/v1/auth/otp/verify'), { email, code })
+      )
     );
-
-    if (!response?.accessToken) {
-      throw new Error('OTP verification did not return accessToken');
-    }
 
     this.tokenStorage.setAccessToken(response.accessToken);
     this.tokenStorage.setRefreshToken(response.refreshToken);
@@ -184,18 +155,11 @@ export class AuthFeatureService {
    * Backend endpoint required: POST /api/v1/auth/totp/login
    */
   async loginWithTotp(email: string, code: string, returnUrl?: string): Promise<void> {
-    const rootUrl = (this.config.rootUrl || '').replace(/\/$/, '');
-    const response = await firstValueFrom(
-      this.http.post<{
-        accessToken: string;
-        accessTokenExpiresAt: string;
-        refreshToken: string;
-      }>(`${rootUrl}/api/v1/auth/totp/login`, { email, code })
+    const response = parseAuthTokens(
+      await firstValueFrom(
+        this.http.post<unknown>(joinApiUrl(this.config.rootUrl, '/api/v1/auth/totp/login'), { email, code })
+      )
     );
-
-    if (!response?.accessToken) {
-      throw new Error('TOTP login did not return accessToken');
-    }
 
     this.tokenStorage.setAccessToken(response.accessToken);
     this.tokenStorage.setRefreshToken(response.refreshToken);
@@ -224,10 +188,9 @@ export class AuthFeatureService {
 
   async fetchCurrentUser(): Promise<void> {
     try {
-      const rootUrl = (this.config.rootUrl || '').replace(/\/$/, '');
-      const meUrl = `${rootUrl}/api/v1/auth/me`;
+      const meUrl = joinApiUrl(this.config.rootUrl, '/api/v1/auth/me');
 
-      const user = await firstValueFrom(this.http.get<UserResponse>(meUrl));
+      const user = parseUserResponse(await firstValueFrom(this.http.get<unknown>(meUrl)));
 
       this._currentUser.set(user);
       this._isAuthenticated.set(true);
@@ -246,21 +209,14 @@ export class AuthFeatureService {
         throw new Error('No refresh token available');
       }
 
-      const rootUrl = (this.config.rootUrl || '').replace(/\/$/, '');
-      const refreshUrl = `${rootUrl}/api/v1/auth/refresh`;
+      const refreshUrl = joinApiUrl(this.config.rootUrl, '/api/v1/auth/refresh');
 
-      const refreshResponse = await firstValueFrom(
-        this.http.post<{
-          accessToken: string;
-          accessTokenExpiresAt: string;
-          refreshToken: string;
-        }>(refreshUrl, { refreshToken })
+      const refreshResponse = parseAuthTokens(
+        await firstValueFrom(this.http.post<unknown>(refreshUrl, { refreshToken }))
       );
 
-      if (refreshResponse?.accessToken) {
-        this.tokenStorage.setAccessToken(refreshResponse.accessToken);
-        this.tokenStorage.setRefreshToken(refreshResponse.refreshToken);
-      }
+      this.tokenStorage.setAccessToken(refreshResponse.accessToken);
+      this.tokenStorage.setRefreshToken(refreshResponse.refreshToken);
     } catch (err: unknown) {
       // Only logout on 401 Unauthorized. Network/server errors should not wipe session.
       if (err instanceof HttpErrorResponse && err.status === 401) {

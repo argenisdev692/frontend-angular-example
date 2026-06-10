@@ -26,8 +26,18 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'posts',
+    loadChildren: () => import('./features/posts/posts.routes').then((m) => m.postsRoutes),
+    canActivate: [authGuard],
+  },
+  {
     path: 'activity-logs',
     loadChildren: () => import('./features/activity-logs/activity-logs.routes').then((m) => m.activityLogsRoutes),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'contact-support',
+    loadChildren: () => import('./features/contact-support/contact-support.routes').then((m) => m.contactSupportRoutes),
     canActivate: [authGuard],
   },
   {
@@ -38,6 +48,16 @@ export const routes: Routes = [
   {
     path: 'backups',
     loadChildren: () => import('./features/backups/backups.routes').then((m) => m.backupsRoutes),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'social-media',
+    loadChildren: () => import('./features/social-media/social-media.routes').then((m) => m.socialMediaRoutes),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'campaigns',
+    loadChildren: () => import('./features/campaigns/campaigns.routes').then((m) => m.campaignsRoutes),
     canActivate: [authGuard],
   },
   { path: '', redirectTo: '/login', pathMatch: 'full' }

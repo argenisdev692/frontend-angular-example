@@ -271,6 +271,12 @@ export abstract class CrudListBase<TEntity> {
       .then((blob) => this.downloadBlob(blob, `${this.entityName}.xlsx`));
   }
 
+  onExportCsv(): void {
+    this.service
+      .export(this.buildExportParams())
+      .then((blob) => this.downloadBlob(blob, `${this.entityName}.csv`));
+  }
+
   protected buildExportParams(): {
     onlyTrashed?: boolean;
     withTrashed?: boolean;

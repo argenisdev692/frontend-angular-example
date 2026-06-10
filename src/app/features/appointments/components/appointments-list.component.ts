@@ -150,6 +150,12 @@ export class AppointmentsListComponent extends CrudListBase<AppointmentResponse>
     return [appointment.city, appointment.state].filter(Boolean).join(', ') || '—';
   }
 
+  // Mark an unread lead as read from the list. Guarded in the template so it
+  // only fires when the appointment is not already read (and not trashed).
+  onMarkRead(id: string): void {
+    this.api.markRead(id).then(() => this.dataResource.reload());
+  }
+
   leadStatusClass(appointment: AppointmentResponse): string {
     switch (appointment.statusLead) {
       case 'New':
@@ -177,5 +183,11 @@ export class AppointmentsListComponent extends CrudListBase<AppointmentResponse>
     this.api
       .export({ ...this.buildExportParams(), format: 'xlsx' })
       .then((blob) => this.downloadBlob(blob, 'appointments.xlsx'));
+  }
+
+  override onExportCsv(): void {
+    this.api
+      .export({ ...this.buildExportParams(), format: 'csv' })
+      .then((blob) => this.downloadBlob(blob, 'appointments.csv'));
   }
 }

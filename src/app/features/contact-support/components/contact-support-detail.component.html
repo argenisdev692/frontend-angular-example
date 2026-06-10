@@ -1,0 +1,107 @@
+<app-sidebar [visible]="drawerVisible()" (visibleChange)="drawerVisible.set($event)"></app-sidebar>
+
+<div class="contact-support-page">
+  <app-page-header
+    title="Support Request"
+    subtitle="View contact and support request details"
+    (menuToggle)="drawerVisible.set(true)" />
+
+  <div class="detail-header">
+    <button class="btn btn--ghost" type="button" (click)="onBack()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      <span>Back to Contact &amp; Support</span>
+    </button>
+    <div class="detail-actions">
+      @if (request(); as r) {
+        @if (!r.readed && !isDeleted()) {
+          <button class="btn btn--ghost" type="button" (click)="onMarkAsRead()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>
+            <span>Mark as read</span>
+          </button>
+        }
+        @if (isDeleted()) {
+          <button class="btn btn--ghost" type="button" (click)="onRestore()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+            <span>Restore</span>
+          </button>
+        } @else {
+          <button class="btn btn--danger" type="button" (click)="onDelete()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <span>Delete</span>
+          </button>
+        }
+      }
+    </div>
+  </div>
+
+  @if (request(); as r) {
+    <div class="card-modern detail-card">
+      <div class="detail-hero">
+        <div class="contact-avatar">
+          <span>{{ initial() }}</span>
+        </div>
+        <div class="hero-info">
+          <h2>{{ fullName() }}</h2>
+          <span class="email">{{ r.email }}</span>
+        </div>
+        <div class="hero-badges">
+          @if (r.readed) {
+            <span class="status-badge status-read">Read</span>
+          } @else {
+            <span class="status-badge status-unread">Unread</span>
+          }
+          @if (isDeleted()) {
+            <span class="status-badge status-deleted">Deleted</span>
+          }
+        </div>
+      </div>
+
+      <div class="detail-grid">
+        <div class="detail-section">
+          <h3>Contact</h3>
+          <div class="detail-row">
+            <span class="label">First name</span>
+            <span class="value">{{ r.firstName || '—' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Last name</span>
+            <span class="value">{{ r.lastName || '—' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Email</span>
+            <span class="value">{{ r.email || '—' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Phone</span>
+            <span class="value">{{ r.phone || '—' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">SMS consent</span>
+            <span class="value">{{ r.smsConsent ? 'Yes' : 'No' }}</span>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Request</h3>
+          <div class="detail-row">
+            <span class="label">Subject</span>
+            <span class="value">{{ r.subject || '—' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Received</span>
+            <span class="value">{{ r.createdAt | date:'medium' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Updated</span>
+            <span class="value">{{ r.updatedAt | date:'medium' }}</span>
+          </div>
+        </div>
+
+        <div class="detail-section detail-section--full">
+          <h3>Message</h3>
+          <p class="message-block">{{ r.message || '—' }}</p>
+        </div>
+      </div>
+    </div>
+  }
+</div>

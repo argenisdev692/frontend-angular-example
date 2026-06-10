@@ -1,0 +1,205 @@
+<app-sidebar [visible]="drawerVisible()" (visibleChange)="drawerVisible.set($event)"></app-sidebar>
+
+<div class="gen-page">
+  <app-page-header
+    title="AI Video Campaign Generator"
+    subtitle="Niche + location → 10 topics → background video generation (15-25s)"
+    (menuToggle)="drawerVisible.set(true)" />
+
+  <!-- Wizard top bar: steps + provider -->
+  <div class="gen-topbar card-modern">
+    <div class="step-indicator">
+      @for (s of [{ n: 1, label: 'Brief' }, { n: 2, label: 'Topics' }]; track s.n) {
+        <div class="step-node" [class.active]="step() === s.n" [class.done]="step() > s.n">
+          <span class="step-dot">{{ s.n }}</span>
+          <span class="step-label">{{ s.label }}</span>
+        </div>
+        @if (s.n < 2) { <span class="step-sep" [class.done]="step() > s.n"></span> }
+      }
+    </div>
+
+    <div class="provider-select">
+      <span class="provider-label">AI</span>
+      @for (p of providers; track p.id) {
+        <button
+          type="button"
+          class="provider-chip"
+          [class.active]="provider() === p.id"
+          (click)="provider.set(p.id)">
+          <span>{{ p.icon }}</span> {{ p.label }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (!hasCompany() && !companyResource.isLoading()) {
+    <div class="gen-error" role="alert">
+      ⚠️ No company data found. Set up your company profile before generating a campaign.
+    </div>
+  }
+
+  @if (errorMsg()) {
+    <div class="gen-error" role="alert">⚠️ {{ errorMsg() }}</div>
+  }
+
+  <!-- ══════════ STEP 1: BRIEF ══════════ -->
+  @if (step() === 1) {
+    <div class="gen-grid">
+      <div class="card-modern gen-card">
+        <label class="form-label" for="niche">Niche / Industry <span class="req">*</span></label>
+        <input id="niche" class="form-input" [ngModel]="niche()" (ngModelChange)="niche.set($event)"
+          placeholder="e.g. water restoration, B2B SaaS, fitness coaching..." />
+
+        <label class="form-label" for="location">Location / Address <span class="req">*</span></label>
+        <input id="location" class="form-input" [ngModel]="location()" (ngModelChange)="location.set($event)"
+          placeholder="e.g. Downtown Miami, north side, specific neighborhood..." />
+
+        <div class="field-row">
+          <div class="field-col">
+            <label class="form-label" for="city">City</label>
+            <input id="city" class="form-input" [ngModel]="city()" (ngModelChange)="city.set($event)"
+              placeholder="Miami" />
+          </div>
+          <div class="field-col">
+            <label class="form-label" for="state">State</label>
+            <input id="state" class="form-input" [ngModel]="state()" (ngModelChange)="state.set($event)"
+              placeholder="Florida" />
+          </div>
+          <div class="field-col">
+            <label class="form-label" for="country">Country</label>
+            <input id="country" class="form-input" [ngModel]="country()" (ngModelChange)="country.set($event)"
+              placeholder="USA" />
+          </div>
+        </div>
+
+        <label class="form-label" for="aiobs">AI observation (fixed phrase for the script)</label>
+        <textarea id="aiobs" class="form-input form-textarea" rows="2"
+          [ngModel]="aiObservation()" (ngModelChange)="aiObservation.set($event)"
+          placeholder="e.g. 'Protect your home today' — this phrase will be woven into the script"></textarea>
+      </div>
+
+      <div class="card-modern gen-card">
+        <span class="form-label">Video format</span>
+        <div class="chip-row">
+          @for (f of formats; track f.id) {
+            <button type="button" class="chip" [class.active]="format() === f.id" (click)="format.set(f.id)">
+              {{ f.icon }} {{ f.label }}
+            </button>
+          }
+        </div>
+
+        <span class="form-label">Funnel stage</span>
+        <div class="chip-row">
+          @for (s of stages; track s.id) {
+            <button type="button" class="chip" [class.active]="funnelStage() === s.id" (click)="funnelStage.set(s.id)">
+              {{ s.icon }} {{ s.id }}
+            </button>
+          }
+        </div>
+        <p class="field-hint">{{ stageDescription() }}</p>
+
+        <div class="field-row">
+          <div class="field-col">
+            <span class="form-label">Duration</span>
+            <div class="chip-row">
+              @for (d of durations; track d) {
+                <button type="button" class="chip" [class.active]="duration() === d" (click)="duration.set(d)">{{ d }}s</button>
+              }
+            </div>
+          </div>
+          <div class="field-col">
+            <span class="form-label">Language</span>
+            <div class="chip-row">
+              @for (l of languages; track l.id) {
+                <button type="button" class="chip" [class.active]="language() === l.id" (click)="language.set(l.id)">{{ l.label }}</button>
+              }
+            </div>
+          </div>
+        </div>
+
+        <label class="toggle-row">
+          <input type="checkbox" class="crud-checkbox" [checked]="generateImages()"
+            (change)="generateImages.set(!generateImages())" />
+          <span>Generate scene images (Gemini Imagen)</span>
+        </label>
+
+        <div class="field-row">
+          <div class="field-col">
+            <label class="form-label" for="phone">Phone</label>
+            <input id="phone" class="form-input" [ngModel]="phone()" (ngModelChange)="phone.set($event)"
+              placeholder="+1 305 ..." />
+          </div>
+          <div class="field-col">
+            <label class="form-label" for="website">Website</label>
+            <input id="website" class="form-input" [ngModel]="website()" (ngModelChange)="website.set($event)"
+              placeholder="https://..." />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gen-actions">
+      <button class="btn-primary-modern" type="button" [disabled]="loading()" (click)="generateTopics()">
+        @if (loading()) { <span class="spinner"></span> Generating topics… }
+        @else { ✦ Generate 10 video topics → }
+      </button>
+    </div>
+  }
+
+  <!-- ══════════ STEP 2: TOPICS ══════════ -->
+  @if (step() === 2) {
+    <div class="topics-header">
+      <div>
+        <h2 class="topics-title">Choose a topic <span class="topics-count">({{ topicsData()?.campaign_topics?.length ?? 0 }})</span></h2>
+        <p class="topics-sub">Niche: {{ niche() }} · Location: {{ location() }} · Format: {{ format() }}</p>
+      </div>
+      <button class="btn-secondary-modern" type="button" (click)="goToStep(1)">← Back</button>
+    </div>
+
+    @if (topicsData()?.local_market_analysis?.geographic_context?.local_trends?.length) {
+      <div class="card-modern trends-bar">
+        <span class="trends-label">🏙️ Local trends:</span>
+        @for (t of topicsData()!.local_market_analysis.geographic_context.local_trends; track t) {
+          <span class="pill pill-active">{{ t }}</span>
+        }
+      </div>
+    }
+
+    <div class="topics-grid">
+      @for (topic of topicsData()?.campaign_topics ?? []; track topic.id) {
+        <button type="button" class="topic-card" [class.selected]="isTopicSelected(topic)" (click)="selectTopic(topic)">
+          <div class="topic-card-head">
+            <span class="topic-index">#{{ topic.id }}</span>
+            <div class="topic-scores">
+              <span class="score-pill score-virality">{{ topic.estimated_virality }}% viral</span>
+              <span class="score-pill score-local">{{ topic.local_market_fit }}% local</span>
+            </div>
+          </div>
+          <h3 class="topic-title">{{ topic.title }}</h3>
+          <p class="topic-angle">{{ topic.angle }}</p>
+          <p class="topic-hook">"{{ topic.hook }}"</p>
+          <p class="topic-geo">{{ topic.geographic_relevance }}</p>
+          <div class="topic-tags">
+            <span class="pill">{{ topic.format }}</span>
+            <span class="pill">{{ topic.content_type }}</span>
+            <span class="pill">{{ topic.suggested_format }}</span>
+          </div>
+        </button>
+      }
+    </div>
+
+    @if (selectedTopic(); as topic) {
+      <div class="card-modern selected-panel">
+        <div>
+          <div class="selected-label">Selected topic</div>
+          <div class="selected-title">{{ topic.title }}</div>
+          <p class="selected-why">{{ topic.why_it_works }}</p>
+        </div>
+        <button class="btn-primary-modern" type="button" [disabled]="submitting() || !hasCompany()" (click)="generateCampaign()">
+          @if (submitting()) { <span class="spinner"></span> Starting… }
+          @else { ✦ Generate full video → }
+        </button>
+      </div>
+    }
+  }
+</div>

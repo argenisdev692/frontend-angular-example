@@ -1,0 +1,174 @@
+<app-sidebar [visible]="drawerVisible()" (visibleChange)="drawerVisible.set($event)"></app-sidebar>
+
+<div class="contact-support-page">
+  <app-page-header
+    title="Contact & Support"
+    subtitle="Incoming contact and support requests"
+    (menuToggle)="drawerVisible.set(true)" />
+
+  <app-advanced-filter
+    searchPlaceholder="Search requests..."
+    [fields]="filterFields"
+    [showCreate]="false"
+    [showExportPdf]="true"
+    [showExportExcel]="false"
+    [showExportCsv]="true"
+    (filtersChange)="onFiltersChange($event)"
+    (exportPdf)="onExportPdf()"
+    (exportCsv)="onExportCsv()" />
+
+  @if (supportsBulk && hasSelection()) {
+    <div class="bulk-actions-bar">
+      <span class="bulk-count">{{ selectedCount() }} selected</span>
+      <div class="bulk-actions">
+        @if (supportsBulkDelete && hasSelectedActive()) {
+          <button class="btn-bulk btn-bulk-delete" type="button" (click)="onBulkDelete()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            Delete selected
+          </button>
+        }
+        @if (supportsBulkRestore && hasSelectedTrashed()) {
+          <button class="btn-bulk btn-bulk-restore" type="button" (click)="onBulkRestore()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+            Restore selected
+          </button>
+        }
+        <button class="btn-bulk btn-bulk-clear" type="button" (click)="clearSelection()">Clear</button>
+      </div>
+    </div>
+  }
+
+  <div class="card-modern table-card">
+    <p-table
+      [value]="requests()"
+      [loading]="isLoading()"
+      [paginator]="false"
+      [rows]="limit()"
+      [totalRecords]="total()"
+      [tableStyle]="{ 'min-width': '100%' }"
+      styleClass="crud-table">
+      <ng-template pTemplate="header">
+        <tr>
+          @if (supportsBulk) {
+            <th class="select-col">
+              <input
+                type="checkbox"
+                class="crud-checkbox"
+                [checked]="allSelected()"
+                [indeterminate]="someSelected()"
+                (change)="toggleSelectAll()"
+                aria-label="Select all" />
+            </th>
+          }
+          @for (col of tableColumns; track col.field) {
+            <th>
+              {{ col.header }}
+            </th>
+          }
+          <th class="actions-header">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-request>
+        <tr
+          [class.deleted]="isDeleted(request)"
+          [class.row-selected]="isSelected(request.id)"
+          [class.row-unread]="!request.readed && !isDeleted(request)">
+          @if (supportsBulk) {
+            <td class="select-col">
+              <input
+                type="checkbox"
+                class="crud-checkbox"
+                [checked]="isSelected(request.id)"
+                (change)="toggleSelect(request.id)"
+                [attr.aria-label]="'Select ' + fullName(request)" />
+            </td>
+          }
+          <td>
+            <div class="cell-name">
+              <span class="name-text">{{ fullName(request) }}</span>
+              @if (isDeleted(request)) {
+                <span class="status-badge status-deleted">Deleted</span>
+              }
+            </div>
+          </td>
+          <td>{{ request.email ?? '—' }}</td>
+          <td>{{ request.subject ?? '—' }}</td>
+          <td>
+            @if (request.readed) {
+              <span class="status-badge status-read">Read</span>
+            } @else {
+              <span class="status-badge status-unread">Unread</span>
+            }
+          </td>
+          <td>{{ request.createdAt | date:'medium' }}</td>
+          <td>
+            <div class="actions-cell">
+              <button
+                class="btn-crud-action btn-crud-action-view"
+                type="button"
+                (click)="onView(request.id)"
+                title="View">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+              @if (!request.readed && !isDeleted(request)) {
+                <button
+                  class="btn-crud-action btn-crud-action-edit"
+                  type="button"
+                  (click)="onMarkAsRead(request.id)"
+                  title="Mark as read">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>
+                </button>
+              }
+              @if (isDeleted(request)) {
+                <button
+                  class="btn-crud-action btn-crud-action-restore"
+                  type="button"
+                  (click)="onRestore(request.id)"
+                  title="Restore">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                </button>
+              } @else {
+                <button
+                  class="btn-crud-action btn-crud-action-delete"
+                  type="button"
+                  (click)="onDelete(request.id)"
+                  title="Delete">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
+              }
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td [attr.colspan]="tableColumns.length + (supportsBulk ? 2 : 1)" class="empty-cell">
+            @if (hasError()) {
+              <div class="crud-error-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+                <p>{{ errorMessage() }}</p>
+                <button class="btn btn--primary" type="button" (click)="requestsResource.reload()">Retry</button>
+              </div>
+            } @else {
+              <div class="crud-empty-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                <p>No support requests found</p>
+                <span>Try adjusting your filters or search terms</span>
+              </div>
+            }
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <p-paginator
+      [rows]="limit()"
+      [totalRecords]="total()"
+      [first]="((page() - 1) * limit())"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      (onPageChange)="onPageChange($event)"
+      styleClass="modern-paginator" />
+  </div>
+</div>

@@ -1,0 +1,65 @@
+<app-sidebar [visible]="drawerVisible()" (visibleChange)="drawerVisible.set($event)"></app-sidebar>
+
+<div class="posts-page">
+  <app-page-header
+    [title]="isEdit() ? 'Edit Post' : 'New Post'"
+    subtitle="Manual post details & SEO"
+    (menuToggle)="drawerVisible.set(true)" />
+
+  <form class="card-modern form-card" [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div class="form-group">
+      <label class="form-label" for="postTitle">Title <span class="req">*</span></label>
+      <input id="postTitle" class="form-input" type="text" formControlName="postTitle"
+        placeholder="Post title" />
+      @if (form.get('postTitle')?.invalid && form.get('postTitle')?.touched) {
+        <span class="field-error">Title is required (min 3 characters).</span>
+      }
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="postExcerpt">Excerpt</label>
+      <input id="postExcerpt" class="form-input" type="text" formControlName="postExcerpt"
+        placeholder="Short summary" />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="postStatus">Status</label>
+      <select id="postStatus" class="form-input" formControlName="postStatus">
+        @for (s of statuses; track s) {
+          <option [value]="s">{{ s }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="postContent">Content (Markdown / safe HTML)</label>
+      <textarea id="postContent" class="form-input form-textarea" rows="12"
+        formControlName="postContent" placeholder="Body content..."></textarea>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label" for="metaTitle">Meta title</label>
+        <input id="metaTitle" class="form-input" type="text" formControlName="metaTitle" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="metaKeywords">Meta keywords</label>
+        <input id="metaKeywords" class="form-input" type="text" formControlName="metaKeywords"
+          placeholder="comma, separated" />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="metaDescription">Meta description</label>
+      <textarea id="metaDescription" class="form-input form-textarea" rows="3"
+        formControlName="metaDescription"></textarea>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn--ghost" (click)="onCancel()">Cancel</button>
+      <button type="submit" class="btn-submit" [disabled]="isSubmitting()">
+        {{ isSubmitting() ? 'Saving…' : (isEdit() ? 'Save changes' : 'Create post') }}
+      </button>
+    </div>
+  </form>
+</div>

@@ -1,5 +1,5 @@
 import { Component, signal, computed, effect, ElementRef, viewChildren, inject, PLATFORM_ID, OnDestroy } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { isPlatformBrowser } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { ButtonPassThroughOptions } from 'primeng/button';
@@ -14,7 +14,7 @@ type AuthMethod = 'password' | 'email_otp' | 'totp';
 
 @Component({
   selector: 'app-login-form',
-  imports: [CommonModule, ButtonModule, InputTextModule, MessageModule],
+  imports: [ButtonModule, InputTextModule, MessageModule],
   templateUrl: './login-form.component.html',
   styleUrl: './login-form.component.css'
  
@@ -351,11 +351,23 @@ export class LoginFormComponent implements OnDestroy {
 
   // ── Shared success redirect helper ──
   // Shows the transient banner then navigates. Delay gives the UI a tick to render in zoneless mode.
+  // The navigation result is awaited: if a guard blocks it (false) or it throws, we surface an error
+  // instead of leaving the user frozen on the "Redirecting..." banner.
   private redirectAfterLoginBanner(): void {
     this.successMessage.set('Login successful! Redirecting...');
-    setTimeout(() => {
+    if (!isPlatformBrowser(this.platformId)) return;
+    setTimeout(async () => {
       const dest = this.returnUrl || '/dashboard';
-      this.router.navigate([dest]);
+      try {
+        const navigated = await this.router.navigate([dest]);
+        if (!navigated) {
+          this.successMessage.set('');
+          this.errorMessage.set('Could not open your dashboard. Please try signing in again.');
+        }
+      } catch {
+        this.successMessage.set('');
+        this.errorMessage.set('Could not open your dashboard. Please try signing in again.');
+      }
     }, 120);
   }
 

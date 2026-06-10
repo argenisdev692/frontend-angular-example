@@ -1,0 +1,351 @@
+<app-sidebar [visible]="drawerVisible()" (visibleChange)="drawerVisible.set($event)"></app-sidebar>
+
+<div class="gen-page">
+  <app-page-header
+    title="AI Social Post Generator"
+    subtitle="Niche → 10 ideas → optimized multi-platform post"
+    (menuToggle)="drawerVisible.set(true)" />
+
+  <!-- Wizard top bar: steps + provider -->
+  <div class="gen-topbar card-modern">
+    <div class="step-indicator">
+      @for (s of [{ n: 1, label: 'Niche' }, { n: 2, label: 'Ideas' }, { n: 3, label: 'Post' }]; track s.n) {
+        <div class="step-node" [class.active]="step() === s.n" [class.done]="step() > s.n">
+          <span class="step-dot">{{ s.n }}</span>
+          <span class="step-label">{{ s.label }}</span>
+        </div>
+        @if (s.n < 3) { <span class="step-sep" [class.done]="step() > s.n"></span> }
+      }
+    </div>
+
+    <div class="provider-select">
+      <span class="provider-label">AI</span>
+      @for (p of providers; track p.id) {
+        <button
+          type="button"
+          class="provider-chip"
+          [class.active]="provider() === p.id"
+          (click)="provider.set(p.id)">
+          <span>{{ p.icon }}</span> {{ p.label }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (errorMsg()) {
+    <div class="gen-error" role="alert">⚠️ {{ errorMsg() }}</div>
+  }
+
+  <!-- ══════════ STEP 1: NICHE ══════════ -->
+  @if (step() === 1) {
+    <div class="gen-grid">
+      <div class="card-modern gen-card">
+        <label class="form-label" for="niche">Niche / Industry <span class="req">*</span></label>
+        <input id="niche" class="form-input" [ngModel]="niche()" (ngModelChange)="niche.set($event)"
+          placeholder="e.g. water restoration, B2B SaaS, fitness coaching..." />
+
+        <label class="form-label" for="company">Company / Brand</label>
+        <input id="company" class="form-input" [ngModel]="company()" (ngModelChange)="company.set($event)"
+          placeholder="Your company or personal brand" />
+
+        <label class="form-label" for="audience">Target audience</label>
+        <input id="audience" class="form-input" [ngModel]="audience()" (ngModelChange)="audience.set($event)"
+          placeholder="SaaS CMOs, SMB owners, freelancers..." />
+      </div>
+
+      <div class="card-modern gen-card">
+        <span class="form-label">Business goal</span>
+        <div class="chip-row">
+          @for (g of goals; track g) {
+            <button type="button" class="chip" [class.active]="goal() === g" (click)="goal.set(g)">{{ g }}</button>
+          }
+        </div>
+
+        <span class="form-label">Brand voice</span>
+        <div class="chip-row">
+          @for (v of voices; track v) {
+            <button type="button" class="chip" [class.active]="voice() === v" (click)="voice.set(v)">{{ v }}</button>
+          }
+        </div>
+
+        <span class="form-label">Platforms</span>
+        <div class="chip-row">
+          <button type="button" class="chip" [class.active]="isPlatformActive('multi')" (click)="togglePlatform('multi')">🌐 All</button>
+          @for (p of platforms; track p.id) {
+            <button type="button" class="chip" [class.active]="isPlatformActive(p.id)" (click)="togglePlatform(p.id)">
+              {{ p.icon }} {{ p.label }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="gen-actions">
+        @if (loading()) {
+          <div class="gen-spinner"><span class="spinner"></span> Processing with AI…</div>
+        } @else {
+          <button type="button" class="btn-submit" (click)="generateIdeas()">✦ Generate 10 ideas →</button>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ══════════ STEP 2: IDEAS ══════════ -->
+  @if (step() === 2 && ideasData(); as data) {
+    <div class="gen-step2">
+      <div class="step2-head">
+        <div>
+          <h2 class="step2-title">Choose an idea <span class="accent">({{ data.content_ideas.length }})</span></h2>
+          <p class="step2-sub">Niche: <span>{{ niche() }}</span> · Audience: <span>{{ data.niche_analysis.target_audience }}</span></p>
+        </div>
+        <button type="button" class="btn btn--ghost" (click)="goToStep(1)">← Back</button>
+      </div>
+
+      @if (data.niche_analysis.trending_topics.length) {
+        <div class="trending-bar card-modern">
+          <span class="trending-label">Trending:</span>
+          @for (t of data.niche_analysis.trending_topics; track t) {
+            <span class="pill pill-gold">{{ t }}</span>
+          }
+        </div>
+      }
+
+      <div class="ideas-grid">
+        @for (idea of data.content_ideas; track idea.id) {
+          <button type="button" class="idea-card" [class.selected]="isIdeaSelected(idea)" (click)="selectIdea(idea)">
+            <div class="idea-top">
+              <span class="idea-title"><span class="idea-num">#{{ idea.id }}</span> {{ idea.title }}</span>
+              <span class="idea-metrics">
+                <span class="metric" [class]="toneClass(idea.estimated_virality)">V:{{ idea.estimated_virality }}</span>
+                <span class="metric metric-roi">ROI:{{ idea.estimated_roi }}</span>
+              </span>
+            </div>
+            <p class="idea-hook">"{{ idea.hook }}"</p>
+            <div class="idea-tags">
+              <span class="pill">{{ idea.estimated_engagement }} eng</span>
+              <span class="pill">{{ idea.difficulty }}</span>
+              <span class="pill">{{ idea.content_type }}</span>
+              <span class="pill">{{ idea.suggested_format }}</span>
+            </div>
+          </button>
+        }
+      </div>
+
+      @if (selectedIdea(); as idea) {
+        <div class="selected-idea card-modern">
+          <span class="selected-label">Selected idea</span>
+          <h3>{{ idea.title }}</h3>
+          <p>{{ idea.why_it_works }}</p>
+        </div>
+      }
+
+      @if (loading()) {
+        <div class="gen-spinner"><span class="spinner"></span> Optimizing until all scores pass…</div>
+      } @else {
+        <div class="step2-actions">
+          <button type="button" class="btn-submit" [disabled]="!selectedIdea()" (click)="generatePost()">✦ Generate full post →</button>
+          <button type="button" class="btn btn--ghost" (click)="goToStep(1)">← Change niche</button>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ══════════ STEP 3: RESULT ══════════ -->
+  @if (step() === 3 && result(); as r) {
+    <div class="gen-step3">
+      <div class="result-head">
+        <div>
+          <h2 class="result-title">Generated post</h2>
+          <p class="result-sub">{{ selectedIdea()?.title }}</p>
+        </div>
+        <div class="result-actions">
+          <span class="status-pill" [class]="publishStatus().tone">● {{ publishStatus().label }}</span>
+          @if (r.quality_warning) {
+            <span class="status-pill score-warn" [title]="r.quality_warning_message ?? ''">⚠ Quality warning</span>
+          }
+          <button type="button" class="btn btn--primary" [disabled]="downloading()" (click)="downloadZip()">
+            {{ downloading() ? 'Preparing…' : '📦 Download ZIP' }}
+          </button>
+          <button type="button" class="btn btn--ghost" (click)="reset()">✦ New post</button>
+        </div>
+      </div>
+
+      <!-- Score rings -->
+      <div class="rings-card card-modern">
+        @for (row of scoreRows(); track row.config.key) {
+          <div class="ring-wrap">
+            <svg class="ring" [attr.width]="ringSize" [attr.height]="ringSize" [attr.viewBox]="'0 0 ' + ringSize + ' ' + ringSize">
+              <circle class="ring-track" [attr.cx]="ringSize/2" [attr.cy]="ringSize/2" [attr.r]="ringRadius" fill="none" stroke-width="5" />
+              <circle class="ring-value" [class]="toneClass(row.value)"
+                [attr.cx]="ringSize/2" [attr.cy]="ringSize/2" [attr.r]="ringRadius" fill="none" stroke-width="5"
+                stroke-linecap="round" [attr.stroke-dasharray]="ringCirc" [attr.stroke-dashoffset]="dashOffset(row.value)"
+                [attr.transform]="'rotate(-90 ' + ringSize/2 + ' ' + ringSize/2 + ')'" />
+              <text [attr.x]="ringSize/2" [attr.y]="ringSize/2 + 5" text-anchor="middle" class="ring-text" [class]="toneClass(row.value)">{{ row.value }}</text>
+            </svg>
+            <span class="ring-label">{{ row.config.icon }} {{ row.config.label }}</span>
+          </div>
+        }
+        @if (aiDetectionRisk(); as risk) {
+          <div class="ring-wrap">
+            <span class="risk-badge" [class]="toneClass(100 - risk.value)">{{ risk.label }} · {{ risk.value }}%</span>
+            <span class="ring-label">AI Detection Risk</span>
+          </div>
+        }
+      </div>
+
+      <div class="result-grid">
+        <!-- LEFT: platform variations -->
+        <div class="card-modern variations-card">
+          <div class="platform-tabs">
+            @for (p of platforms; track p.id) {
+              <button type="button" class="platform-tab" [class.active]="activeTab() === p.id" (click)="activeTab.set(p.id)">
+                <span>{{ p.icon }}</span> {{ p.label }}
+              </button>
+            }
+          </div>
+
+          @if (activeVariation(); as v) {
+            <div class="variation-body">
+              <div class="variation-head">
+                <span class="variation-count">{{ variationCount(v) }}</span>
+                <button type="button" class="btn btn--ghost btn--sm" (click)="copy(v.adapted_content, 'content')">
+                  {{ copiedKey() === 'content' ? '✅ Copied' : '📋 Copy' }}
+                </button>
+              </div>
+
+              @if (v.subject_line) {
+                <div class="meta-line"><strong>Subject:</strong> {{ v.subject_line }}</div>
+              }
+              @if (v.preview_text) {
+                <div class="meta-line"><strong>Preview:</strong> {{ v.preview_text }}</div>
+              }
+
+              <pre class="variation-content">{{ v.adapted_content }}</pre>
+
+              @if (v.is_thread && v.thread_tweets.length) {
+                <div class="thread-block">
+                  <span class="block-label">🧵 Thread</span>
+                  @for (tweet of v.thread_tweets; track $index) {
+                    <div class="thread-tweet">{{ $index + 1 }}. {{ tweet }}</div>
+                  }
+                </div>
+              }
+
+              @if (v.hashtags.length) {
+                <div class="hashtags">
+                  @for (h of v.hashtags; track h) { <span class="pill pill-accent">{{ h }}</span> }
+                </div>
+              }
+
+              @if (v.image_prompt) {
+                <div class="image-prompt">
+                  <span class="block-label">🎨 Gemini Imagen prompt</span>
+                  <p class="prompt-text">{{ v.image_prompt }}</p>
+                  <button type="button" class="btn btn--ghost btn--sm" (click)="copy(v.image_prompt, 'img')">
+                    {{ copiedKey() === 'img' ? '✅ Copied' : '📋 Copy prompt' }}
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- RIGHT: scores / seo / eeat / tips -->
+        <div class="side-col">
+          <div class="card-modern side-card">
+            <div class="side-tabs">
+              @for (t of ['scores', 'seo', 'eeat', 'tips']; track t) {
+                <button type="button" class="side-tab" [class.active]="scoreTab() === t" (click)="scoreTab.set($any(t))">{{ t }}</button>
+              }
+            </div>
+
+            <div class="side-body">
+              @switch (scoreTab()) {
+                @case ('scores') {
+                  @for (row of scoreRows(); track row.config.key) {
+                    <div class="bar-score">
+                      <div class="bar-head">
+                        <span>{{ row.config.icon }} {{ row.config.label }}
+                          @if (row.config.critical) { <span class="crit">critical</span> }
+                        </span>
+                        <span class="bar-value" [class]="toneClass(row.value)">{{ row.value }}</span>
+                      </div>
+                      <div class="bar-track"><div class="bar-fill" [class]="toneClass(row.value)" [style.width.%]="row.value"></div></div>
+                      @if (row.factors.length) {
+                        <div class="bar-factors">
+                          @for (f of row.factors; track f) { <span class="pill pill-sm">{{ f }}</span> }
+                        </div>
+                      }
+                    </div>
+                  }
+                  <p class="explain"><strong>Summary:</strong> avg {{ r.scores.summary.overall_average }} ·
+                    {{ r.scores.summary.iterations_required }} iteration(s)</p>
+                }
+
+                @case ('seo') {
+                  <div class="seo-field"><span class="block-label">Meta title</span><p>{{ r.seo_metadata.meta_title }}</p></div>
+                  <div class="seo-field"><span class="block-label">Meta description</span><p>{{ r.seo_metadata.meta_description }}</p></div>
+                  <div class="seo-field"><span class="block-label">OG title</span><p>{{ r.seo_metadata.og_title }}</p></div>
+                  <div class="seo-field"><span class="block-label">Twitter title</span><p>{{ r.seo_metadata.twitter_title }}</p></div>
+                  <div class="seo-field"><span class="block-label">Canonical</span><p>{{ r.seo_metadata.canonical_url }}</p></div>
+                  <div class="seo-field">
+                    <span class="block-label">Primary keyword</span><p>{{ r.seo_analysis.primary_keyword }}</p>
+                    <div class="hashtags">
+                      @for (k of r.seo_analysis.lsi_keywords; track k) { <span class="pill pill-sm">{{ k }}</span> }
+                    </div>
+                  </div>
+                  <button type="button" class="btn btn--ghost btn--sm"
+                    (click)="copy(schemaJson(), 'schema')">
+                    {{ copiedKey() === 'schema' ? '✅ Copied' : '📋 Copy JSON-LD' }}
+                  </button>
+                }
+
+                @case ('eeat') {
+                  @for (g of eeatGroups; track g.key) {
+                    <div class="eeat-group">
+                      <span class="block-label">{{ g.icon }} {{ g.label }}</span>
+                      @for (s of eeatSignals(g.key); track s) {
+                        <div class="eeat-signal">• {{ s }}</div>
+                      } @empty {
+                        <div class="eeat-signal muted">No signals.</div>
+                      }
+                    </div>
+                  }
+                }
+
+                @case ('tips') {
+                  @for (s of r.optimization_suggestions; track $index) {
+                    <div class="tip"><span class="tip-num">{{ $index + 1 }}.</span> {{ s }}</div>
+                  }
+                  @if (r.research_sources.length) {
+                    <span class="block-label">🔬 Research sources</span>
+                    @for (src of r.research_sources; track src.url) {
+                      <a class="source" [href]="src.url" target="_blank" rel="noopener noreferrer">{{ src.title }}</a>
+                    }
+                  }
+                }
+              }
+            </div>
+          </div>
+
+          <!-- Main cover prompt -->
+          @if (r.cover_image.main_prompt) {
+            <div class="card-modern side-card">
+              <span class="block-label">🎨 Main cover prompt</span>
+              <div class="cover-meta">
+                @for (c of r.cover_image.color_palette; track c) {
+                  <span class="swatch" [style.background]="c" [title]="c"></span>
+                }
+                @if (r.cover_image.style) { <span class="pill pill-accent">{{ r.cover_image.style }}</span> }
+                @if (r.cover_image.mood) { <span class="pill">{{ r.cover_image.mood }}</span> }
+              </div>
+              <p class="prompt-text">{{ r.cover_image.main_prompt }}</p>
+              <button type="button" class="btn btn--ghost btn--sm" (click)="copy(r.cover_image.main_prompt, 'main_img')">
+                {{ copiedKey() === 'main_img' ? '✅ Copied' : '📋 Copy prompt' }}
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>

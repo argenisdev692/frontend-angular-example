@@ -43,6 +43,12 @@
         <span>Excel</span>
       </button>
     }
+    @if (showExportCsv()) {
+      <button class="btn btn--ghost" type="button" (click)="exportCsv.emit()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6M8 13h2M8 17h2M14 13h2M14 17h2" /></svg>
+        <span>CSV</span>
+      </button>
+    }
     @if (showCreate()) {
       <app-animated-button
         [text]="createLabel()"

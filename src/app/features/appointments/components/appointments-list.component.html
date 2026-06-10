@@ -11,8 +11,10 @@
     [fields]="filterFields"
     (filtersChange)="onFiltersChange($event)"
     (create)="onCreate()"
+    [showExportCsv]="true"
     (exportPdf)="onExportPdf()"
-    (exportExcel)="onExportExcel()" />
+    (exportExcel)="onExportExcel()"
+    (exportCsv)="onExportCsv()" />
 
   @if (supportsBulk && hasSelection()) {
     <div class="bulk-actions-bar">
@@ -109,6 +111,15 @@
                 title="View">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               </button>
+              @if (!appointment.readed && !isTrashed(appointment)) {
+                <button
+                  class="btn-crud-action btn-crud-action-edit"
+                  type="button"
+                  (click)="onMarkRead(appointment.id)"
+                  title="Mark as read">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>
+                </button>
+              }
               <button
                 class="btn-crud-action btn-crud-action-edit"
                 type="button"

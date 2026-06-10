@@ -1,0 +1,180 @@
+<app-sidebar [visible]="drawerVisible()" (visibleChange)="drawerVisible.set($event)"></app-sidebar>
+
+<div class="gen-page">
+  <app-page-header
+    title="Social Media Generator"
+    subtitle="Niche → Viral topics → AI-optimized multi-platform content"
+    (menuToggle)="drawerVisible.set(true)" />
+
+  <!-- Wizard step indicator -->
+  <div class="gen-topbar card-modern">
+    <ol class="step-indicator" aria-label="Generation progress">
+      @for (s of [{ n: 1, label: 'Niche' }, { n: 2, label: 'Topics' }, { n: 3, label: 'Queue' }]; track s.n) {
+        <li
+          class="step-node"
+          [class.active]="step() === s.n"
+          [class.done]="step() > s.n"
+          [attr.aria-current]="step() === s.n ? 'step' : null">
+          <span class="step-dot">{{ s.n }}</span>
+          <span class="step-label">{{ s.label }}</span>
+        </li>
+        @if (s.n < 3) { <span class="step-sep" [class.done]="step() > s.n" aria-hidden="true"></span> }
+      }
+    </ol>
+  </div>
+
+  @if (errorMsg()) {
+    <div class="gen-error" role="alert"><span aria-hidden="true">⚠️</span> {{ errorMsg() }}</div>
+  }
+
+  <!-- ══════════ STEP 1: NICHE ══════════ -->
+  @if (step() === 1) {
+    <form class="gen-grid" [formGroup]="form" (ngSubmit)="findTopics()">
+      <div class="card-modern gen-card">
+        <label class="form-label" for="niche">Niche / Industry <span class="req" aria-hidden="true">*</span></label>
+        <input
+          id="niche"
+          class="form-input"
+          formControlName="niche"
+          autocomplete="off"
+          placeholder="e.g. water restoration, B2B SaaS, fitness coaching..."
+          [attr.aria-invalid]="form.controls.niche.touched && form.controls.niche.invalid"
+          [attr.aria-describedby]="form.controls.niche.touched && form.controls.niche.invalid ? 'niche-err' : null" />
+        @if (form.controls.niche.touched && form.controls.niche.invalid) {
+          <span class="field-error" id="niche-err">Enter a niche (at least 2 characters).</span>
+        }
+
+        <label class="form-label" for="language">Language</label>
+        <input
+          id="language"
+          class="form-input"
+          formControlName="language"
+          autocomplete="off"
+          placeholder="en, es, fr... (default: en)" />
+      </div>
+
+      <div class="card-modern gen-card">
+        <span class="form-label" id="platforms-label">Platforms</span>
+        <div class="chip-row" role="group" aria-labelledby="platforms-label">
+          <button
+            type="button"
+            class="chip"
+            [class.active]="isPlatformActive('multi')"
+            [attr.aria-pressed]="isPlatformActive('multi')"
+            (click)="togglePlatform('multi')">
+            <span aria-hidden="true">🌐</span> All
+          </button>
+          @for (p of platforms; track p.id) {
+            <button
+              type="button"
+              class="chip"
+              [class.active]="isPlatformActive(p.id)"
+              [attr.aria-pressed]="isPlatformActive(p.id)"
+              (click)="togglePlatform(p.id)">
+              <span aria-hidden="true">{{ p.icon }}</span> {{ p.label }}
+            </button>
+          }
+        </div>
+        <p class="gen-hint">Pick the networks to generate for, or keep <strong>All</strong> for every platform.</p>
+      </div>
+
+      <div class="gen-actions">
+        @if (loading()) {
+          <div class="gen-spinner"><span class="spinner" aria-hidden="true"></span> Discovering viral topics…</div>
+        } @else {
+          <button type="submit" class="btn-submit" [disabled]="form.controls.niche.invalid">
+            <span aria-hidden="true">✦</span> Discover 10 viral topics <span aria-hidden="true">→</span>
+          </button>
+        }
+      </div>
+    </form>
+  }
+
+  <!-- ══════════ STEP 2: TOPICS ══════════ -->
+  @if (step() === 2 && topicsData(); as topics) {
+    <div class="gen-step2">
+      <div class="step2-head">
+        <div>
+          <h2 class="step2-title">Choose a viral topic <span class="accent">({{ topics.length }})</span></h2>
+          <p class="step2-sub">Niche: <span>{{ form.controls.niche.value }}</span></p>
+        </div>
+        <button type="button" class="btn--ghost" (click)="goToStep(1)"><span aria-hidden="true">←</span> Back</button>
+      </div>
+
+      <div class="ideas-grid">
+        @for (topic of topics; track topic.id) {
+          <button
+            type="button"
+            class="idea-card"
+            [class.selected]="isTopicSelected(topic)"
+            [attr.aria-pressed]="isTopicSelected(topic)"
+            (click)="selectTopic(topic)">
+            <div class="idea-top">
+              <span class="idea-title"><span class="idea-num">#{{ $index + 1 }}</span> {{ topic.title }}</span>
+              <span class="idea-trend" [title]="'Trend score ' + topic.trendScore + ' / 100'">
+                <span class="idea-trend-icon" aria-hidden="true">🔥</span>{{ topic.trendScore }}
+              </span>
+            </div>
+            <p class="idea-hook">{{ topic.description }}</p>
+            @if (topic.tags.length) {
+              <div class="idea-tags">
+                @for (tag of topic.tags; track tag) {
+                  <span class="pill">{{ tag }}</span>
+                }
+              </div>
+            }
+            @if (topic.whyViral) {
+              <p class="idea-why">{{ topic.whyViral }}</p>
+            }
+          </button>
+        }
+      </div>
+
+      @if (selectedTopic(); as topic) {
+        <div class="selected-idea card-modern" aria-live="polite">
+          <span class="selected-label">Selected topic</span>
+          <h3>{{ topic.title }}</h3>
+          <p>{{ topic.description }}</p>
+        </div>
+      }
+
+      @if (loading()) {
+        <div class="gen-spinner"><span class="spinner" aria-hidden="true"></span> Queueing content generation…</div>
+      } @else {
+        <div class="step2-actions">
+          <button type="button" class="btn-submit" [disabled]="!selectedTopic()" (click)="generateContent()">
+            <span aria-hidden="true">✦</span> Generate content <span aria-hidden="true">→</span>
+          </button>
+          <button type="button" class="btn--ghost" (click)="goToStep(1)"><span aria-hidden="true">←</span> Change niche</button>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ══════════ STEP 3: QUEUED ══════════ -->
+  @if (step() === 3 && jobResult(); as job) {
+    <div class="gen-step3">
+      <div class="card-modern queued-card">
+        <div class="queued-icon" aria-hidden="true">🚀</div>
+        <h2 class="queued-title">Content generation queued!</h2>
+        <p class="queued-desc">
+          Your multi-platform content is being generated in the background. The system
+          researches trends, writes platform-specific copy, and re-optimizes until every
+          quality score passes — this can take a minute. It will appear in your history
+          once it's ready.
+        </p>
+
+        <div class="job-info">
+          <span class="job-label">Job ID</span>
+          <code class="job-id">{{ job.jobId }}</code>
+          <span class="job-status">Status: <span class="status-badge">{{ job.status }}</span></span>
+        </div>
+
+        <div class="queued-actions">
+          <button type="button" class="btn-submit" (click)="onViewHistory()"><span aria-hidden="true">📋</span> View History</button>
+          <button type="button" class="btn--ghost" (click)="onGenerateMore()"><span aria-hidden="true">✦</span> Generate More</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

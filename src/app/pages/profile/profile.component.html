@@ -248,14 +248,95 @@
         <div class="security-divider"></div>
 
         <div class="security-section">
-          <h3 class="security-title">Active Sessions</h3>
-          <p class="security-desc">Log out of all other devices and sessions.</p>
-          <button
-            class="logout-link"
-            (click)="logoutAll()">
-            <i class="pi pi-sign-out"></i>
-            Logout All Sessions
-          </button>
+          <div class="security-header">
+            <div>
+              <h3 class="security-title">Active Sessions</h3>
+              <p class="security-desc">Devices and browsers currently signed in to your account.</p>
+            </div>
+            <button class="logout-link" [disabled]="loggingOutAll()" (click)="logoutAll()">
+              <i class="pi pi-sign-out"></i>
+              {{ loggingOutAll() ? 'Logging out…' : 'Logout All' }}
+            </button>
+          </div>
+
+          @if (loadingSessions()) {
+            <div class="session-loading"><i class="pi pi-spin pi-spinner"></i> Loading sessions…</div>
+          } @else if (sessions().length === 0) {
+            <p class="session-empty">No active sessions to display.</p>
+          } @else {
+            <ul class="session-list">
+              @for (s of sessions(); track s.id) {
+                <li class="session-item">
+                  <div class="session-icon"><i class="pi pi-desktop"></i></div>
+                  <div class="session-info">
+                    <span class="session-primary">
+                      {{ s.userAgent || 'Unknown device' }}
+                      @if (s.current) { <span class="status-badge success">This device</span> }
+                    </span>
+                    <span class="session-meta">
+                      {{ s.ipAddress || '—' }}{{ s.location ? ' · ' + s.location : '' }}
+                      @if (s.lastActiveAt) { · {{ s.lastActiveAt | date:'medium' }} }
+                    </span>
+                  </div>
+                  @if (!s.current) {
+                    <button
+                      class="btn-action btn-action-delete"
+                      title="Revoke session"
+                      aria-label="Revoke session"
+                      [disabled]="revokingId() === s.id"
+                      (click)="revokeSession(s.id)">
+                      <i class="pi" [class.pi-spin]="revokingId() === s.id" [class.pi-spinner]="revokingId() === s.id" [class.pi-trash]="revokingId() !== s.id"></i>
+                    </button>
+                  }
+                </li>
+              }
+            </ul>
+          }
+        </div>
+
+        <div class="security-divider"></div>
+
+        <div class="security-section">
+          <div class="security-header">
+            <div>
+              <h3 class="security-title">Trusted Devices</h3>
+              <p class="security-desc">Devices that can skip two-factor verification for 30 days.</p>
+            </div>
+            @if (trustedDevices().length > 0) {
+              <button class="logout-link" (click)="revokeAllTrustedDevices()">
+                <i class="pi pi-trash"></i> Remove All
+              </button>
+            }
+          </div>
+
+          @if (loadingDevices()) {
+            <div class="session-loading"><i class="pi pi-spin pi-spinner"></i> Loading devices…</div>
+          } @else if (trustedDevices().length === 0) {
+            <p class="session-empty">No trusted devices.</p>
+          } @else {
+            <ul class="session-list">
+              @for (d of trustedDevices(); track d.id) {
+                <li class="session-item">
+                  <div class="session-icon"><i class="pi pi-mobile"></i></div>
+                  <div class="session-info">
+                    <span class="session-primary">{{ d.name || d.userAgent || 'Unknown device' }}</span>
+                    <span class="session-meta">
+                      @if (d.lastUsedAt) { Last used {{ d.lastUsedAt | date:'medium' }} }
+                      @if (d.expiresAt) { · Expires {{ d.expiresAt | date:'mediumDate' }} }
+                    </span>
+                  </div>
+                  <button
+                    class="btn-action btn-action-delete"
+                    title="Remove device"
+                    aria-label="Remove trusted device"
+                    [disabled]="revokingId() === d.id"
+                    (click)="revokeTrustedDevice(d.id)">
+                    <i class="pi" [class.pi-spin]="revokingId() === d.id" [class.pi-spinner]="revokingId() === d.id" [class.pi-trash]="revokingId() !== d.id"></i>
+                  </button>
+                </li>
+              }
+            </ul>
+          }
         </div>
       </div>
 
@@ -348,8 +429,7 @@
       <p-button
         label="Cancel"
         icon="pi pi-times"
-        severity="secondary"
-        [text]="true"
+        styleClass="btn-secondary-modern"
         (onClick)="closeTotpSetup()" />
       <p-button
         label="Verify & Enable"

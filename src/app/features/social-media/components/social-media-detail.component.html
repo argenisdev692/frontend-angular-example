@@ -1,0 +1,250 @@
+<app-sidebar [visible]="drawerVisible()" (visibleChange)="drawerVisible.set($event)"></app-sidebar>
+
+<div class="sm-page">
+  <app-page-header
+    title="Social Media Content"
+    subtitle="View generated multi-platform content"
+    (menuToggle)="drawerVisible.set(true)" />
+
+  @if (isLoading()) {
+    <div class="detail-skeleton" aria-busy="true" aria-label="Loading content">
+      <div class="card-modern sk-hero">
+        <span class="skeleton sk-title"></span>
+        <div class="sk-badges">
+          <span class="skeleton sk-badge"></span>
+          <span class="skeleton sk-badge"></span>
+          <span class="skeleton sk-badge"></span>
+        </div>
+        <span class="skeleton sk-text"></span>
+      </div>
+      <div class="card-modern sk-rings">
+        <span class="skeleton sk-ring"></span>
+        <span class="skeleton sk-ring"></span>
+        <span class="skeleton sk-ring"></span>
+      </div>
+      <div class="card-modern sk-block">
+        <span class="skeleton sk-text"></span>
+        <span class="skeleton sk-text"></span>
+        <span class="skeleton sk-text sk-text-short"></span>
+      </div>
+    </div>
+  }
+
+  @if (hasError()) {
+    <div class="card-modern error-card">
+      <div class="crud-error-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+        <p>Failed to load content. Please try again.</p>
+        <button class="btn btn--primary" type="button" (click)="retry()">Retry</button>
+      </div>
+    </div>
+  }
+
+  @if (item(); as item) {
+    <!-- Header -->
+    <div class="detail-header">
+      <div class="detail-hero">
+        <div class="hero-info">
+          <h2>{{ item.topicTitle }}</h2>
+          <div class="hero-badges">
+            <span class="badge badge-niche">{{ item.niche }}</span>
+            <span class="badge badge-lang">{{ item.language ?? 'en' }}</span>
+            <span class="badge badge-date">{{ item.createdAt | date:'mediumDate' }}</span>
+          </div>
+          @if (item.topicDescription) {
+            <p class="excerpt">{{ item.topicDescription }}</p>
+          }
+        </div>
+      </div>
+
+      <div class="detail-actions">
+        <button type="button" class="btn btn--ghost" (click)="onBack()"><span aria-hidden="true">←</span> Back</button>
+        <button type="button" class="btn btn--primary" [disabled]="downloading()" (click)="onDownloadZip()">
+          @if (downloading()) {
+            <span class="spinner-small" aria-hidden="true"></span> Downloading…
+          } @else {
+            <span aria-hidden="true">⬇</span> Download ZIP
+          }
+        </button>
+        <button type="button" class="btn btn--danger" (click)="onDelete()"><span aria-hidden="true">🗑</span> Delete</button>
+      </div>
+    </div>
+
+    @if (actionError()) {
+      <div class="gen-error" role="alert"><span aria-hidden="true">⚠️</span> {{ actionError() }}</div>
+    }
+
+    <!-- Scores -->
+    @if (item.viralityScore != null || item.roiScore != null || item.aiDetectionScore) {
+      <div class="card-modern scores-card">
+        <h3 class="section-title">Quality Scores</h3>
+        <div class="scores-rings">
+          @if (item.viralityScore != null) {
+            <div class="score-ring-item">
+              <div
+                class="score-ring"
+                [style.--ring-color]="scoreColor(item.viralityScore)"
+                [style.--ring-val]="item.viralityScore"
+                role="img"
+                [attr.aria-label]="'Virality score ' + item.viralityScore + ' out of 100'">
+                <span class="score-ring-num">{{ item.viralityScore }}</span>
+              </div>
+              <span class="score-ring-label"><span aria-hidden="true">🔥</span> Virality</span>
+            </div>
+          }
+          @if (item.roiScore != null) {
+            <div class="score-ring-item">
+              <div
+                class="score-ring"
+                [style.--ring-color]="scoreColor(item.roiScore)"
+                [style.--ring-val]="item.roiScore"
+                role="img"
+                [attr.aria-label]="'ROI score ' + item.roiScore + ' out of 100'">
+                <span class="score-ring-num">{{ item.roiScore }}</span>
+              </div>
+              <span class="score-ring-label"><span aria-hidden="true">💰</span> ROI</span>
+            </div>
+          }
+          @if (item.aiDetectionScore; as ai) {
+            <div class="score-ring-item">
+              <div
+                class="score-ring"
+                [style.--ring-color]="scoreColor(ai.humanWritten)"
+                [style.--ring-val]="ai.humanWritten"
+                role="img"
+                [attr.aria-label]="'Human-written ' + ai.humanWritten + ' percent'">
+                <span class="score-ring-num">{{ ai.humanWritten }}<span class="score-ring-unit">%</span></span>
+              </div>
+              <span class="score-ring-label"><span aria-hidden="true">🧑</span> Human-written</span>
+            </div>
+          }
+        </div>
+
+        @if (item.aiDetectionScore; as ai) {
+          <div class="ai-breakdown" aria-label="AI detection breakdown">
+            <span class="ai-chip">AI-generated <strong>{{ ai.aiGenerated }}%</strong></span>
+            <span class="ai-chip">Paraphrased <strong>{{ ai.aiParaphrased }}%</strong></span>
+            <span class="ai-chip">Shows AI signs <strong>{{ ai.showsAiSigns }}%</strong></span>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Networks -->
+    @if (networksList().length > 0) {
+      <div class="card-modern networks-card">
+        <h3 class="section-title">Networks</h3>
+        <div class="networks-row">
+          @for (net of networksList(); track net) {
+            <span class="network-badge">{{ net }}</span>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Platform Tabs -->
+    @if (availableTabs().length > 0) {
+      <div class="card-modern content-card">
+        <div class="platform-tabs" role="tablist" aria-label="Platform content">
+          @for (p of platforms; track p.id) {
+            @if (availableTabs().includes(p.id)) {
+              <button
+                type="button"
+                role="tab"
+                [id]="'tab-' + p.id"
+                [attr.aria-selected]="activeTab() === p.id"
+                [attr.aria-controls]="'panel-' + p.id"
+                [attr.tabindex]="activeTab() === p.id ? 0 : -1"
+                class="platform-tab"
+                [class.active]="activeTab() === p.id"
+                [style.--tab-accent]="p.color"
+                (click)="setTab(p.id)"
+                (keydown)="onTabKeydown($event)">
+                <span class="tab-icon" aria-hidden="true">{{ p.icon }}</span>
+                <span class="tab-label">{{ p.label }}</span>
+              </button>
+            }
+          }
+        </div>
+
+        @if (activePost(); as post) {
+          <div
+            class="platform-content"
+            role="tabpanel"
+            [id]="'panel-' + activeTab()"
+            [attr.aria-labelledby]="'tab-' + activeTab()"
+            tabindex="0">
+            @if (post.hook) {
+              <div class="content-hook">
+                <span class="hook-label">Hook</span>
+                <p class="hook-text">{{ post.hook }}</p>
+              </div>
+            }
+
+            <div class="content-body">
+              <span class="content-label">Content</span>
+              <p class="body-text">{{ post.body }}</p>
+            </div>
+
+            @if (post.emojis) {
+              <div class="content-emojis">
+                <span class="content-label">Emojis</span>
+                <span class="emojis-text">{{ post.emojis }}</span>
+              </div>
+            }
+
+            @if (post.hashtags.length) {
+              <div class="content-hashtags">
+                <span class="content-label">Hashtags</span>
+                <div class="hashtags-row">
+                  @for (tag of post.hashtags; track tag) {
+                    <span class="hashtag">{{ tag }}</span>
+                  }
+                </div>
+              </div>
+            }
+
+            @if (post.image?.url; as imageUrl) {
+              <div class="content-image">
+                <span class="content-label">Image</span>
+                <img [src]="imageUrl" [alt]="item.topicTitle" loading="lazy" />
+              </div>
+            }
+
+            <div class="content-actions">
+              <button type="button" class="btn btn--primary" (click)="copyAll(post)">
+                @if (copiedKey() === 'all') { <span aria-hidden="true">✅</span> Copied! } @else { <span aria-hidden="true">📋</span> Copy all }
+              </button>
+              <button type="button" class="btn btn--ghost" (click)="copy(post.body, 'body')">
+                @if (copiedKey() === 'body') { <span aria-hidden="true">✅</span> Copied! } @else { <span aria-hidden="true">📋</span> Copy content }
+              </button>
+              @if (post.hashtags.length) {
+                <button type="button" class="btn btn--ghost" (click)="copy(post.hashtags.join(' '), 'hashtags')">
+                  @if (copiedKey() === 'hashtags') { <span aria-hidden="true">✅</span> Copied! } @else { <span aria-hidden="true">📋</span> Copy hashtags }
+                </button>
+              }
+            </div>
+          </div>
+        } @else {
+          <div class="empty-platform">
+            <p>No content available for this platform.</p>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="card-modern empty-card">
+        <p>No platform content generated yet.</p>
+      </div>
+    }
+
+    <!-- Report -->
+    @if (item.analysisReportUrl) {
+      <div class="card-modern report-card">
+        <h3 class="section-title">Analysis Report</h3>
+        <a [href]="item.analysisReportUrl" target="_blank" rel="noopener" class="btn btn--primary">
+          <span aria-hidden="true">📄</span> View Full Report
+        </a>
+      </div>
+    }
+  }
+</div>

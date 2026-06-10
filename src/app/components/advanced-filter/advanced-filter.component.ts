@@ -52,6 +52,10 @@ export class AdvancedFilterComponent {
   /** Whether to show the Excel export button. */
   readonly showExportExcel = input<boolean>(true);
 
+  /** Whether to show the CSV export button. Opt-in: only lists whose service
+   *  supports CSV export and bind (exportCsv) should enable it. */
+  readonly showExportCsv = input<boolean>(false);
+
   /** Whether to show the Create button. */
   readonly showCreate = input<boolean>(true);
 
@@ -63,6 +67,7 @@ export class AdvancedFilterComponent {
   readonly create = output<void>();
   readonly exportPdf = output<void>();
   readonly exportExcel = output<void>();
+  readonly exportCsv = output<void>();
 
   // ── State (signals) ───────────────────────
   readonly search = signal('');

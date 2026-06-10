@@ -37,8 +37,24 @@ export class SidebarComponent {
   menuItems = input<NavItem[]>([
     { icon: 'pi pi-home', label: 'Dashboard', route: '/dashboard' },
     { icon: 'pi pi-users', label: 'Users', route: '/users' },
-    { icon: 'pi pi-calendar', label: 'Appointments', route: '/appointments' },
-    { icon: 'pi pi-tags', label: 'Blog Categories', route: '/blog-categories' },
+    {
+      icon: 'pi pi-inbox',
+      label: 'Leads & Support',
+      children: [
+        { icon: 'pi pi-calendar', label: 'Appointments', route: '/appointments' },
+        { icon: 'pi pi-envelope', label: 'Contact & Support', route: '/contact-support' },
+      ],
+    },
+    {
+      icon: 'pi pi-megaphone',
+      label: 'Content & Marketing',
+      children: [
+        { icon: 'pi pi-tags', label: 'Blog Categories', route: '/blog-categories' },
+        { icon: 'pi pi-file-edit', label: 'Posts', route: '/posts' },
+        { icon: 'pi pi-share-alt', label: 'Social Media', route: '/social-media' },
+        { icon: 'pi pi-video', label: 'Campaigns', route: '/campaigns' },
+      ],
+    },
     { icon: 'pi pi-building', label: 'Company Data', route: '/company-data' },
     {
       icon: 'pi pi-cog',

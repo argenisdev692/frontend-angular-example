@@ -11,8 +11,14 @@ import { ToastModule } from 'primeng/toast';
 import { DialogModule } from 'primeng/dialog';
 import { MessageService } from 'primeng/api';
 import { AuthFeatureService } from '../../features/auth/services/auth.service';
+import {
+  AuthSessionsFeatureService,
+  SessionView,
+  TrustedDeviceView,
+} from '../../features/auth/services/sessions.service';
 import { AuthService as GeneratedAuthService } from '../../api/services/auth.service';
 import { ApiConfiguration } from '../../api/api-configuration';
+import { joinApiUrl } from '../../api/api-url';
 import { UserResponse } from '../../api/models/user-response';
 import { UpdateProfileDto } from '../../api/models/update-profile-dto';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
@@ -43,6 +49,7 @@ import { FloatingMenuButtonComponent } from '../../components/floating-menu-butt
 })
 export class ProfileComponent implements OnInit {
   private authFeatureService = inject(AuthFeatureService);
+  private sessionsService = inject(AuthSessionsFeatureService);
   private generatedAuthService = inject(GeneratedAuthService);
   private http = inject(HttpClient);
   private config = inject(ApiConfiguration);
@@ -69,6 +76,14 @@ export class ProfileComponent implements OnInit {
   protected readonly backupCodes = signal<string[]>([]);
   protected readonly confirmingDisable = signal(false);
 
+  // ── Active sessions & trusted devices ──
+  protected readonly sessions = signal<SessionView[]>([]);
+  protected readonly trustedDevices = signal<TrustedDeviceView[]>([]);
+  protected readonly loadingSessions = signal(false);
+  protected readonly loadingDevices = signal(false);
+  protected readonly revokingId = signal<string | null>(null);
+  protected readonly loggingOutAll = signal(false);
+
   protected editForm: Partial<UpdateProfileDto> = {};
   protected passwordForm = { currentPassword: '', newPassword: '', confirmPassword: '' };
 
@@ -80,6 +95,9 @@ export class ProfileComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     await this.loadUser();
+    // Load sessions/devices in the background — failures must not block the page.
+    this.loadSessions();
+    this.loadTrustedDevices();
   }
 
   async loadUser(): Promise<void> {
@@ -162,9 +180,8 @@ export class ProfileComponent implements OnInit {
     formData.append('file', blob, 'profile-photo.jpg');
 
     try {
-      const rootUrl = (this.config.rootUrl || '').replace(/\/$/, '');
       await firstValueFrom(
-        this.http.post(`${rootUrl}/api/v1/auth/me/profile-photo`, formData)
+        this.http.post(joinApiUrl(this.config.rootUrl, '/api/v1/auth/me/profile-photo'), formData)
       );
       await this.authFeatureService.fetchCurrentUser();
       this.cropperImageUrl.set(null);
@@ -189,9 +206,8 @@ export class ProfileComponent implements OnInit {
       // Note: the generated ChangePasswordDto requires a token field which is for reset flow.
       // For authenticated password change, the backend may expect a different shape.
       // Using raw HttpClient for authenticated change-password to avoid DTO mismatch.
-      const rootUrl = (this.config.rootUrl || '').replace(/\/$/, '');
       await firstValueFrom(
-        this.http.post(`${rootUrl}/api/v1/auth/change-password`, {
+        this.http.post(joinApiUrl(this.config.rootUrl, '/api/v1/auth/change-password'), {
           currentPassword: this.passwordForm.currentPassword,
           newPassword: this.passwordForm.newPassword,
           passwordConfirmation: this.passwordForm.confirmPassword
@@ -207,11 +223,73 @@ export class ProfileComponent implements OnInit {
   }
 
   async logoutAll(): Promise<void> {
+    this.loggingOutAll.set(true);
     try {
       await this.generatedAuthService.authControllerLogoutAll();
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'All other sessions have been logged out' });
+      this.loadSessions();
     } catch {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to logout other sessions' });
+    } finally {
+      this.loggingOutAll.set(false);
+    }
+  }
+
+  async loadSessions(): Promise<void> {
+    this.loadingSessions.set(true);
+    try {
+      this.sessions.set(await this.sessionsService.listSessions());
+    } catch {
+      this.sessions.set([]);
+    } finally {
+      this.loadingSessions.set(false);
+    }
+  }
+
+  async loadTrustedDevices(): Promise<void> {
+    this.loadingDevices.set(true);
+    try {
+      this.trustedDevices.set(await this.sessionsService.listTrustedDevices());
+    } catch {
+      this.trustedDevices.set([]);
+    } finally {
+      this.loadingDevices.set(false);
+    }
+  }
+
+  async revokeSession(id: string): Promise<void> {
+    this.revokingId.set(id);
+    try {
+      await this.sessionsService.revokeSession(id);
+      this.sessions.update(list => list.filter(s => s.id !== id));
+      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Session revoked' });
+    } catch {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to revoke session' });
+    } finally {
+      this.revokingId.set(null);
+    }
+  }
+
+  async revokeTrustedDevice(id: string): Promise<void> {
+    this.revokingId.set(id);
+    try {
+      await this.sessionsService.revokeTrustedDevice(id);
+      this.trustedDevices.update(list => list.filter(d => d.id !== id));
+      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Device removed' });
+    } catch {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to remove device' });
+    } finally {
+      this.revokingId.set(null);
+    }
+  }
+
+  async revokeAllTrustedDevices(): Promise<void> {
+    try {
+      await this.sessionsService.revokeAllTrustedDevices();
+      this.trustedDevices.set([]);
+      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'All trusted devices removed' });
+    } catch {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to remove trusted devices' });
     }
   }
 
@@ -222,13 +300,12 @@ export class ProfileComponent implements OnInit {
     this.totpSetupData.set(null);
 
     try {
-      const rootUrl = (this.config.rootUrl || '').replace(/\/$/, '');
       const data = await firstValueFrom(
         this.http.post<{
           qrCodeUrl: string;
           secret: string;
           manualEntryKey?: string;
-        }>(`${rootUrl}/api/v1/auth/two-factor/setup`, {})
+        }>(joinApiUrl(this.config.rootUrl, '/api/v1/auth/two-factor/setup'), {})
       );
       this.totpSetupData.set(data);
     } catch {
@@ -248,7 +325,7 @@ export class ProfileComponent implements OnInit {
 
     this.savingTotp.set(true);
     try {
-      await this.http.post(`${(this.config.rootUrl || '').replace(/\/$/, '')}/api/v1/auth/two-factor/enable`, { code }).toPromise();
+      await this.http.post(joinApiUrl(this.config.rootUrl, '/api/v1/auth/two-factor/enable'), { code }).toPromise();
       this.totpSetupVisible.set(false);
       this.totpCode.set('');
       this.totpSetupData.set(null);
@@ -270,7 +347,7 @@ export class ProfileComponent implements OnInit {
 
     this.savingTotp.set(true);
     try {
-      await this.http.post(`${(this.config.rootUrl || '').replace(/\/$/, '')}/api/v1/auth/two-factor/disable`, {}).toPromise();
+      await this.http.post(joinApiUrl(this.config.rootUrl, '/api/v1/auth/two-factor/disable'), {}).toPromise();
       this.confirmingDisable.set(false);
       await this.authFeatureService.fetchCurrentUser();
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Two-factor authentication disabled' });
@@ -283,9 +360,8 @@ export class ProfileComponent implements OnInit {
 
   async regenerateBackupCodes(): Promise<void> {
     try {
-      const rootUrl = (this.config.rootUrl || '').replace(/\/$/, '');
       const data = await firstValueFrom(
-        this.http.post<{ backupCodes: string[] }>(`${rootUrl}/api/v1/auth/two-factor/backup-codes/regenerate`, {})
+        this.http.post<{ backupCodes: string[] }>(joinApiUrl(this.config.rootUrl, '/api/v1/auth/two-factor/backup-codes/regenerate'), {})
       );
       this.backupCodes.set(data.backupCodes);
       this.backupCodesVisible.set(true);

@@ -12,26 +12,35 @@ export const authGuard: CanActivateFn = async (_route, state) => {
     return true;
   }
 
-  // If we already have a valid current user, allow immediately
+  // Already have the user loaded → allow immediately.
   if (authService.currentUser()) {
     return true;
   }
 
-  // Try to validate the stored session. If token expired (401),
-  // fetchCurrentUser throws without wiping session — we try refresh first.
+  // We hold an in-memory access token (just logged in). Trust it and allow
+  // navigation NOW. Loading /me is best-effort and must NOT gate the route:
+  // a freshly-issued token can momentarily 401 (server clock skew / session
+  // replication lag), and blocking on /me here was bouncing the user straight
+  // back to /login right after a successful sign-in. We hydrate currentUser in
+  // the background; if the token is genuinely invalid, the interceptor's 401
+  // refresh-retry (and ultimately logout) handles it on the next API call.
+  if (authService.token()) {
+    authService.fetchCurrentUser().catch(() => {
+      // Background hydration; ignored on failure (interceptor owns recovery).
+    });
+    return true;
+  }
+
+  // No token at all — this is a fresh load/reload (tokens live in memory only,
+  // so a reload always lands here) or an expired session. Try a silent refresh
+  // before forcing re-authentication.
   try {
+    await authService.refreshToken();
     await authService.fetchCurrentUser();
     return true;
   } catch {
-    // Token may be expired — try silent refresh before forcing login.
-    try {
-      await authService.refreshToken();
-      await authService.fetchCurrentUser();
-      return true;
-    } catch {
-      // Refresh failed — clean session and redirect.
-      await authService.logout(state.url);
-      return false;
-    }
+    // Refresh failed — clean session and redirect to login.
+    await authService.logout(state.url);
+    return false;
   }
 };

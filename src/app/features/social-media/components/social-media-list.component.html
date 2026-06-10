@@ -1,0 +1,177 @@
+<app-sidebar [visible]="drawerVisible()" (visibleChange)="drawerVisible.set($event)"></app-sidebar>
+
+<div class="social-media-page">
+  <app-page-header
+    title="Social Media"
+    subtitle="AI-generated viral content for LinkedIn, Twitter, Instagram, Facebook & TikTok"
+    (menuToggle)="drawerVisible.set(true)" />
+
+  <app-advanced-filter
+    searchPlaceholder="Search content..."
+    [fields]="filterFields"
+    (filtersChange)="onFiltersChange($event)"
+    (create)="onGenerate()"
+    (exportPdf)="onExportPdf()"
+    (exportExcel)="onExportExcel()" />
+
+  @if (supportsBulk && hasSelection()) {
+    <div class="bulk-actions-bar">
+      <span class="bulk-count">{{ selectedCount() }} selected</span>
+      <div class="bulk-actions">
+        @if (supportsBulkDelete && hasSelectedActive()) {
+          <button class="btn-bulk btn-bulk-delete" type="button" (click)="onBulkDelete()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            Delete selected
+          </button>
+        }
+        <button class="btn-bulk btn-bulk-clear" type="button" (click)="clearSelection()">Clear</button>
+      </div>
+    </div>
+  }
+
+  <div class="card-modern table-card">
+    <p-table
+      [value]="itemsList()"
+      [loading]="isLoading()"
+      [paginator]="false"
+      [rows]="limit()"
+      [totalRecords]="total()"
+      [tableStyle]="{ 'min-width': '100%' }"
+      styleClass="crud-table">
+      <ng-template pTemplate="header">
+        <tr>
+          @if (supportsBulk) {
+            <th class="select-col">
+              <input
+                type="checkbox"
+                class="crud-checkbox"
+                [checked]="allSelected()"
+                [indeterminate]="someSelected()"
+                (change)="toggleSelectAll()"
+                aria-label="Select all" />
+            </th>
+          }
+          @for (col of tableColumns; track col.field) {
+            <th>{{ col.header }}</th>
+          }
+          <th class="actions-header">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-item>
+        <tr [class.row-selected]="isSelected(item.id)">
+          @if (supportsBulk) {
+            <td class="select-col">
+              <input
+                type="checkbox"
+                class="crud-checkbox"
+                [checked]="isSelected(item.id)"
+                (change)="toggleSelect(item.id)"
+                [attr.aria-label]="'Select ' + item.topicTitle" />
+            </td>
+          }
+          <td>
+            <div class="cell-name">
+              <span class="name-text">{{ item.topicTitle }}</span>
+            </div>
+          </td>
+          <td>{{ item.niche }}</td>
+          <td>
+            @let nets = platformsFor(item);
+            @if (nets.length) {
+              <div class="net-icons">
+                @for (p of nets; track p.id) {
+                  <span class="net-icon" role="img" [attr.aria-label]="p.label" [title]="p.label">{{ p.icon }}</span>
+                }
+              </div>
+            } @else {
+              <span class="muted">—</span>
+            }
+          </td>
+          <td>
+            <div class="score-cells">
+              @if (item.viralityScore != null) {
+                <span [class]="chipClass(item.viralityScore)" title="Virality"><span aria-hidden="true">🔥</span>{{ item.viralityScore }}</span>
+              }
+              @if (item.roiScore != null) {
+                <span [class]="chipClass(item.roiScore)" title="ROI"><span aria-hidden="true">💰</span>{{ item.roiScore }}</span>
+              }
+              @if (item.viralityScore == null && item.roiScore == null) {
+                <span class="muted">—</span>
+              }
+            </div>
+          </td>
+          <td>{{ item.language ?? '—' }}</td>
+          <td>{{ item.createdAt | date:'mediumDate' }}</td>
+          <td>
+            <div class="actions-cell">
+              <button
+                class="btn-crud-action btn-crud-action-view"
+                type="button"
+                (click)="onView(item.id)"
+                title="View">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+              <button
+                class="btn-crud-action btn-crud-action-download"
+                type="button"
+                (click)="onDownloadZip(item.id)"
+                title="Download ZIP">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              </button>
+              <button
+                class="btn-crud-action btn-crud-action-delete"
+                type="button"
+                (click)="onDelete(item.id)"
+                title="Delete">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        @for (row of skeletonRows; track row) {
+          <tr>
+            @if (supportsBulk) {
+              <td class="select-col"><span class="skeleton sk-check"></span></td>
+            }
+            @for (col of tableColumns; track col.field) {
+              <td><span class="skeleton sk-line"></span></td>
+            }
+            <td><span class="skeleton sk-line sk-line-sm"></span></td>
+          </tr>
+        }
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td [attr.colspan]="tableColumns.length + (supportsBulk ? 2 : 1)" class="empty-cell">
+            @if (hasError()) {
+              <div class="crud-error-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+                <p>{{ errorMessage() }}</p>
+                <button class="btn btn--primary" type="button" (click)="listResource.reload()">Retry</button>
+              </div>
+            } @else {
+              <div class="crud-empty-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                <p>No social media content found</p>
+                <span>Generate viral content with AI or adjust your filters</span>
+              </div>
+            }
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <p-paginator
+      [rows]="limit()"
+      [totalRecords]="total()"
+      [first]="((page() - 1) * limit())"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      (onPageChange)="onPageChange($event)"
+      styleClass="modern-paginator" />
+  </div>
+</div>
