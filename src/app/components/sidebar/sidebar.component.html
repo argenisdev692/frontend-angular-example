@@ -14,21 +14,54 @@
   </ng-template>
 
   <nav class="sidebar-nav">
-    <p-menu [model]="menuModel()" styleClass="drawer-menu">
-      <ng-template #item let-item>
+    @for (item of menuItems(); track item.label) {
+      @if (item.children?.length) {
+        <div class="menu-group" [class.open]="isGroupOpen(item)">
+          <button
+            class="menu-item menu-group-toggle"
+            [class.active]="groupHasActive(item)"
+            type="button"
+            [attr.aria-expanded]="isGroupOpen(item)"
+            [attr.aria-label]="item.label"
+            (click)="toggleGroup(item.label)">
+            <i class="menu-icon {{ item.icon }}"></i>
+            <span class="menu-label">{{ item.label }}</span>
+            <i class="menu-chevron pi pi-chevron-down" [class.rotated]="isGroupOpen(item)"></i>
+          </button>
+          @if (isGroupOpen(item)) {
+            <div class="menu-submenu">
+              @for (child of item.children; track child.label) {
+                <button
+                  class="menu-item menu-subitem"
+                  [class.active]="isActive(child.route)"
+                  type="button"
+                  [attr.aria-label]="child.label"
+                  (click)="navigate(child.route)">
+                  <i class="menu-icon {{ child.icon }}"></i>
+                  <span class="menu-label">{{ child.label }}</span>
+                  @if (isActive(child.route)) {
+                    <span class="menu-indicator"></span>
+                  }
+                </button>
+              }
+            </div>
+          }
+        </div>
+      } @else {
         <button
-          [class]="getMenuItemClasses(item.active)"
           class="menu-item"
+          [class.active]="isActive(item.route)"
+          type="button"
           [attr.aria-label]="item.label"
           (click)="navigate(item.route)">
           <i class="menu-icon {{ item.icon }}"></i>
           <span class="menu-label">{{ item.label }}</span>
-          @if (item.active) {
+          @if (isActive(item.route)) {
             <span class="menu-indicator"></span>
           }
         </button>
-      </ng-template>
-    </p-menu>
+      }
+    }
   </nav>
 
   <ng-template #footer>

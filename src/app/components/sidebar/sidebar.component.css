@@ -185,28 +185,61 @@
   border-top: 1px solid var(--border-default);
 }
 
-/* Flatten the PrimeNG Menu so the existing .menu-item styling is preserved */
-::ng-deep .app-drawer .drawer-menu.p-menu {
+.menu-item {
   width: 100%;
-  background: transparent;
-  border: none;
-  padding: 0;
 }
 
-::ng-deep .app-drawer .drawer-menu .p-menu-list {
+/* ── Collapsible menu group (e.g. Settings) ── */
+.menu-group {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-1);
 }
 
-::ng-deep .app-drawer .drawer-menu .p-menu-item-content,
-::ng-deep .app-drawer .drawer-menu .p-menu-item-content:hover {
-  background: transparent;
-  border-radius: var(--radius-lg);
-}
-
-::ng-deep .app-drawer .drawer-menu .menu-item {
+.menu-group-toggle {
   width: 100%;
+}
+
+.menu-chevron {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  transition: transform var(--transition);
+}
+
+.menu-chevron.rotated {
+  transform: rotate(180deg);
+}
+
+.menu-submenu {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-left: var(--space-4);
+  padding-left: var(--space-3);
+  border-left: 1px solid var(--border-default);
+  overflow: hidden;
+  animation: submenu-in var(--transition) ease;
+}
+
+.menu-subitem {
+  padding-top: var(--space-2);
+  padding-bottom: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.menu-subitem .menu-icon {
+  font-size: var(--text-sm);
+}
+
+@keyframes submenu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Theme toggle row in footer */

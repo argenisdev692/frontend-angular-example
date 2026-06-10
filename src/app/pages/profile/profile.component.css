@@ -371,12 +371,18 @@
   border-radius: var(--radius-lg);
   padding: var(--space-4);
   border: 1px solid var(--border-default);
+  line-height: 0;
 }
 
 .totp-qr {
-  width: 180px;
-  height: 180px;
+  width: 200px;
+  height: 200px;
+  max-width: 100%;
   display: block;
+  /* QR codes are crisp bitmaps; default smoothing makes them look jagged/blurry
+     ("entrecortada") when scaled. Render pixel-exact so the modules stay sharp. */
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 
 .manual-key {

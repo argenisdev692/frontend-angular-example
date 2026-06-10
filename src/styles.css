@@ -1144,6 +1144,65 @@ html {
 }
 
 /* ═══════════════════════════════════════════════════════
+   DIALOG (renders in body via appendTo="body")
+   PrimeNG v21 classes: .p-dialog / .p-dialog-header / .p-dialog-content
+   Global so the dialog chrome matches the app theme tokens.
+   ═══════════════════════════════════════════════════════ */
+
+.p-dialog {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.p-dialog .p-dialog-header {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: var(--space-5) var(--space-6);
+}
+
+.p-dialog .p-dialog-title {
+  font-family: var(--font-sans);
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+}
+
+.p-dialog .p-dialog-header-actions .p-dialog-header-action,
+.p-dialog .p-dialog-close-button {
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  transition: color var(--transition), background var(--transition);
+}
+
+.p-dialog .p-dialog-header-actions .p-dialog-header-action:hover,
+.p-dialog .p-dialog-close-button:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.p-dialog .p-dialog-content {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  padding: var(--space-6);
+}
+
+.p-dialog .p-dialog-footer {
+  background: var(--bg-card);
+  border-top: 1px solid var(--border-subtle);
+  padding: var(--space-4) var(--space-6);
+}
+
+.p-dialog-mask {
+  background: color-mix(in srgb, var(--bg-void) 70%, transparent);
+  backdrop-filter: blur(2px);
+}
+
+/* ═══════════════════════════════════════════════════════
    MULTISELECT (trigger global + overlay renders in body)
    PrimeNG v21 classes: .p-multiselect / .p-multiselect-overlay
    ═══════════════════════════════════════════════════════ */

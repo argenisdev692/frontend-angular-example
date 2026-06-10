@@ -16,6 +16,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'appointments',
+    loadChildren: () => import('./features/appointments/appointments.routes').then((m) => m.appointmentsRoutes),
+    canActivate: [authGuard],
+  },
+  {
     path: 'blog-categories',
     loadChildren: () => import('./features/blog-categories/blog-categories.routes').then((m) => m.blogCategoriesRoutes),
     canActivate: [authGuard],
@@ -28,6 +33,11 @@ export const routes: Routes = [
   {
     path: 'roles',
     loadChildren: () => import('./features/roles/roles.routes').then((m) => m.rolesRoutes),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'backups',
+    loadChildren: () => import('./features/backups/backups.routes').then((m) => m.backupsRoutes),
     canActivate: [authGuard],
   },
   { path: '', redirectTo: '/login', pathMatch: 'full' }

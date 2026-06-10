@@ -1,0 +1,100 @@
+<app-sidebar [visible]="drawerVisible()" (visibleChange)="drawerVisible.set($event)"></app-sidebar>
+
+<div class="backups-page">
+  <app-page-header
+    title="Backup Detail"
+    subtitle="View backup snapshot information"
+    (menuToggle)="drawerVisible.set(true)" />
+
+  <div class="detail-header">
+    <button class="btn btn--ghost" type="button" (click)="onBack()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      <span>Back to Backups</span>
+    </button>
+    <div class="detail-actions">
+      @if (canDownload()) {
+        <button class="btn btn--primary" type="button" (click)="onDownload()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Download</span>
+        </button>
+      }
+      <button class="btn btn--danger" type="button" (click)="onDelete()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        <span>Delete</span>
+      </button>
+    </div>
+  </div>
+
+  @if (backup(); as b) {
+    <div class="card-modern detail-card">
+      <div class="detail-hero">
+        <div class="backup-avatar" [class]="'avatar-' + (b.status | lowercase)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        </div>
+        <div class="hero-info">
+          <h2>
+            <span class="status-badge" [class]="'status-' + (b.status | lowercase)">{{ b.status }}</span>
+          </h2>
+          <span class="email">{{ b.id }}</span>
+        </div>
+      </div>
+
+      <div class="detail-grid">
+        <div class="detail-section">
+          <h3>Summary</h3>
+          <div class="detail-row">
+            <span class="label">Status</span>
+            <span class="value">{{ b.status }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Triggered By</span>
+            <span class="value">{{ b.triggeredBy }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Size</span>
+            <span class="value">{{ formatSize(b.sizeBytes) }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Actor ID</span>
+            <span class="value">{{ b.actorId ?? '—' }}</span>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Timing</h3>
+          <div class="detail-row">
+            <span class="label">Started</span>
+            <span class="value">{{ b.startedAt | date:'medium' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Completed</span>
+            <span class="value">{{ b.completedAt ? (b.completedAt | date:'medium') : '—' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Created</span>
+            <span class="value">{{ b.createdAt | date:'medium' }}</span>
+          </div>
+        </div>
+
+        <div class="detail-section detail-section--full">
+          <h3>Storage</h3>
+          <div class="detail-row">
+            <span class="label">Object Key</span>
+            <span class="value value--mono">{{ b.objectKey ?? '—' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Checksum</span>
+            <span class="value value--mono">{{ b.checksum ?? '—' }}</span>
+          </div>
+        </div>
+
+        @if (b.error) {
+          <div class="detail-section detail-section--full">
+            <h3>Error</h3>
+            <pre class="error-block">{{ b.error }}</pre>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

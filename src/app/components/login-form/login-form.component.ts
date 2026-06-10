@@ -1,4 +1,4 @@
-import { Component, signal, computed, effect, ElementRef, viewChildren, inject, PLATFORM_ID } from '@angular/core';
+import { Component, signal, computed, effect, ElementRef, viewChildren, inject, PLATFORM_ID, OnDestroy } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -19,7 +19,7 @@ type AuthMethod = 'password' | 'email_otp' | 'totp';
   styleUrl: './login-form.component.css'
  
 })
-export class LoginFormComponent {
+export class LoginFormComponent implements OnDestroy {
   otpInputs = viewChildren<ElementRef<HTMLInputElement>>('otpInput');
   totpInputs = viewChildren<ElementRef<HTMLInputElement>>('totpInput');
 
@@ -78,14 +78,21 @@ export class LoginFormComponent {
   failedAttempts = signal(0);
   lockoutUntil = signal<number | null>(null);
 
+  // Ticking clock signal: in a zoneless app `Date.now()` is NOT reactive, so a
+  // computed that reads it never re-evaluates on its own. Without this, once the
+  // lockout kicks in the submit button stays disabled forever (until a full page
+  // reload). The interval below advances `now` so the countdown and re-enable work.
+  private now = signal(Date.now());
+  private lockoutInterval?: ReturnType<typeof setInterval>;
+
   isLockedOut = computed(() => {
     const until = this.lockoutUntil();
-    return !!until && Date.now() < until;
+    return !!until && this.now() < until;
   });
 
   lockoutSecondsRemaining = computed(() => {
     const until = this.lockoutUntil();
-    return until ? Math.max(0, Math.ceil((until - Date.now()) / 1000)) : 0;
+    return until ? Math.max(0, Math.ceil((until - this.now()) / 1000)) : 0;
   });
 
   // ── Computed validations ──
@@ -141,6 +148,7 @@ export class LoginFormComponent {
     this.resetSuccess.set(false);
     this.failedAttempts.set(0);
     this.lockoutUntil.set(null);
+    this.stopLockoutTicker();
 
     // Show session-expired hint when redirected from a protected route
     const returnUrl = this.route.snapshot.queryParams['returnUrl'];
@@ -194,7 +202,7 @@ export class LoginFormComponent {
     } catch {
       const attempts = this.failedAttempts() + 1;
       this.failedAttempts.set(attempts);
-      if (attempts >= this.MAX_ATTEMPTS) { this.lockoutUntil.set(Date.now() + this.LOCKOUT_MS); this.errorMessage.set('Account locked for 30 seconds.'); }
+      if (attempts >= this.MAX_ATTEMPTS) { this.lockoutUntil.set(Date.now() + this.LOCKOUT_MS); this.startLockoutTicker(); this.errorMessage.set('Account locked for 30 seconds.'); }
       else { this.errorMessage.set(`Invalid credentials. Attempt ${attempts} of ${this.MAX_ATTEMPTS}.`); }
     } finally { this.isLoading.set(false); }
   }
@@ -349,5 +357,33 @@ export class LoginFormComponent {
       const dest = this.returnUrl || '/dashboard';
       this.router.navigate([dest]);
     }, 120);
+  }
+
+  // ── Lockout ticker (zoneless-safe) ──
+  private startLockoutTicker(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    this.now.set(Date.now());
+    this.stopLockoutTicker();
+    this.lockoutInterval = setInterval(() => {
+      this.now.set(Date.now());
+      const until = this.lockoutUntil();
+      if (!until || Date.now() >= until) {
+        this.stopLockoutTicker();
+        this.lockoutUntil.set(null);
+        this.failedAttempts.set(0);
+        this.errorMessage.set('');
+      }
+    }, 500);
+  }
+
+  private stopLockoutTicker(): void {
+    if (this.lockoutInterval) {
+      clearInterval(this.lockoutInterval);
+      this.lockoutInterval = undefined;
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.stopLockoutTicker();
   }
 }

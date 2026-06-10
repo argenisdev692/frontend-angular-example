@@ -66,6 +66,7 @@
                 (ngModelChange)="onFieldChange(field.key, $event)"
                 selectionMode="range"
                 [readonlyInput]="true"
+                [maxDate]="maxDate"
                 dateFormat="dd/mm/yy"
                 [placeholder]="field.placeholder ?? 'Start — End'"
                 [showButtonBar]="true"

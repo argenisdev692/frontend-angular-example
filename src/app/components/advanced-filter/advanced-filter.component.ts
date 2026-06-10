@@ -68,6 +68,9 @@ export class AdvancedFilterComponent {
   readonly search = signal('');
   readonly advancedOpen = signal(false);
 
+  /** Upper bound for date-range filters: future dates make no sense for "created/updated" filtering. */
+  readonly maxDate = new Date();
+
   /** Dynamic filter values stored by field key. */
   readonly filterValues = signal<Record<string, unknown>>({});
 

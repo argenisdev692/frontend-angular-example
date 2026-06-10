@@ -1,0 +1,125 @@
+<app-sidebar [visible]="drawerVisible()" (visibleChange)="drawerVisible.set($event)"></app-sidebar>
+
+<div class="appointments-page">
+  <app-page-header
+    [title]="fullName()"
+    subtitle="View appointment information and lead status"
+    (menuToggle)="drawerVisible.set(true)" />
+
+  <div class="detail-header">
+    <button class="btn btn--ghost" type="button" (click)="onBack()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      <span>Back to Appointments</span>
+    </button>
+    <div class="detail-actions">
+      <button class="btn btn--ghost" type="button" (click)="onEdit()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        <span>Edit</span>
+      </button>
+      @if (isDeleted()) {
+        <button class="btn btn--success" type="button" (click)="onRestore()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+          <span>Restore</span>
+        </button>
+      } @else {
+        <button class="btn btn--danger" type="button" (click)="onDelete()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          <span>Delete</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (appointment(); as a) {
+    <div class="card-modern detail-card">
+      <div class="detail-hero">
+        <div class="avatar">
+          <span>{{ a.firstName.charAt(0) }}{{ a.lastName.charAt(0) }}</span>
+        </div>
+        <div class="hero-info">
+          <h2>{{ a.firstName }} {{ a.lastName }}</h2>
+          <span class="email">{{ a.email ?? a.phone }}</span>
+          @if (isDeleted()) {
+            <span class="status-badge status-deleted">Deleted</span>
+          } @else {
+            <span class="status-badge status-active">Active</span>
+          }
+        </div>
+      </div>
+
+      <div class="detail-grid">
+        <div class="detail-section">
+          <h3>Contact</h3>
+          <div class="detail-row">
+            <span class="label">Phone</span>
+            <span class="value">{{ a.phone }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Email</span>
+            <span class="value">{{ a.email ?? '—' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">SMS Consent</span>
+            <span class="value">{{ a.smsConsent ? 'Yes' : 'No' }}</span>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Lead</h3>
+          <div class="detail-row">
+            <span class="label">Lead Status</span>
+            <span class="value">{{ a.statusLead && a.statusLead !== 'null' ? a.statusLead : '—' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Owner</span>
+            <span class="value">{{ a.owner ?? '—' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Registration Date</span>
+            <span class="value">{{ a.registrationDate ? (a.registrationDate | date:'mediumDate') : '—' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Read</span>
+            <span class="value">{{ a.readed ? 'Yes' : 'No' }}</span>
+          </div>
+        </div>
+
+        <div class="detail-section detail-section--full">
+          <h3>Address</h3>
+          <div class="detail-row">
+            <span class="label">Full Address</span>
+            <span class="value">{{ fullAddress() }}</span>
+          </div>
+        </div>
+
+        <div class="detail-section detail-section--full">
+          <h3>Notes</h3>
+          <div class="detail-row">
+            <span class="label">Message</span>
+            <span class="value">{{ a.message ?? '—' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Notes</span>
+            <span class="value">{{ a.notes ?? '—' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Additional Note</span>
+            <span class="value">{{ a.additionalNote ?? '—' }}</span>
+          </div>
+        </div>
+
+        <div class="detail-section detail-section--full">
+          <h3>Record</h3>
+          <div class="detail-row">
+            <span class="label">Created</span>
+            <span class="value">{{ a.createdAt | date:'medium' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Updated</span>
+            <span class="value">{{ a.updatedAt | date:'medium' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>
